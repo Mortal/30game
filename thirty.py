@@ -108,11 +108,11 @@ def solve_game(dice_count, sides, utility):
 
         values.append([div(a, n_outcomes) for a in tmp_value])
 
-    return values[dice_count][0], reroll_strategy
+    return values, reroll_strategy
 
 
 def value(dice_count, sides, utility):
-    return solve_game(dice_count, sides, utility)[0]
+    return solve_game(dice_count, sides, utility)[0][dice_count][0]
 
 
 def compute_strategy(dice_count, sides, utility):
