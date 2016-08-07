@@ -139,5 +139,42 @@ def play_game(dice_count, sides, strategy):
     return s
 
 
+def main():
+    dice_count = 6
+    sides = 6
+
+    # nplayers = 4
+    lose = -1
+    strictly_below = 20
+    dead_on = 6
+    above = [2, 4, 8, 14, 20, 30]
+
+    def utility(s):
+        # "Skarpt under 11" => strictly less than 5
+        # "30" => 24
+        if s < 5:
+            return strictly_below
+        elif s < 24:
+            # return 24 - s
+            return lose * (24 - s)
+        elif s == 24:
+            return dead_on
+        else:
+            return above[s - 25]
+        return s
+
+    v, strategy = value(dice_count, sides, utility, True)
+    print("Expected utility: %s = %.2f" % (v, float(v)))
+
+    sum_utility = 0
+    n_tries = 0
+    while True:
+        s = play_game(dice_count, sides, strategy)
+        sum_utility += utility(s)
+        n_tries += 1
+        print("Utility: %s. Played %s games, average utility %.2f" %
+              (utility(s), n_tries, sum_utility / n_tries))
+
+
 if __name__ == "__main__":
-    print(value(2, 6, lambda s: 1 if s == 10 else 0))
+    main()
