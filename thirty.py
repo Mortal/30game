@@ -162,9 +162,9 @@ def main():
     dice_count = 6
     sides = 6
     v, strategy = value(dice_count, sides, my_utility, True)
-    print("Expected utility: %s = %.2f" % (v, float(v)))
 
     if args.infiniplay:
+        print("Expected utility: %s = %.2f" % (v, float(v)))
         sum_utility = 0
         n_tries = 0
         while True:
