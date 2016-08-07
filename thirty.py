@@ -31,7 +31,7 @@ def permutations(s):
     return factorial(n) // product(map(factorial, counts.values()))
 
 
-def value(dice_count, sides, utility, full=False):
+def solve_game(dice_count, sides, utility):
     """
     Suppose we have n k-sided dice (sides 0, 1, ..., k-1)
     and we perform the following process:
@@ -108,10 +108,15 @@ def value(dice_count, sides, utility, full=False):
 
         values.append([div(a, n_outcomes) for a in tmp_value])
 
-    if full:
-        return values[dice_count][0], reroll_strategy
-    else:
-        return values[dice_count][0]
+    return values[dice_count][0], reroll_strategy
+
+
+def value(dice_count, sides, utility):
+    return solve_game(dice_count, sides, utility)[0]
+
+
+def compute_strategy(dice_count, sides, utility):
+    return solve_game(dice_count, sides, utility)[1]
 
 
 def play_game(dice_count, sides, strategy):
@@ -183,7 +188,7 @@ def main():
 
     dice_count = 6
     sides = 6
-    v, strategy = value(dice_count, sides, my_utility, True)
+    v, strategy = solve_game(dice_count, sides, my_utility)
 
     if args.infiniplay:
         print("Expected utility: %s = %.2f" % (v, float(v)))
@@ -196,10 +201,10 @@ def main():
             print("Utility: %s. Played %s games, average utility %.2f" %
                   (my_utility(s), n_tries, sum_utility / n_tries))
     else:
-        below_strategy = value(
-            dice_count, sides, (lambda s: 1 if s < 5 else 0), True)[1]
-        above_strategy = value(
-            dice_count, sides, (lambda s: 1 if s >= 24 else 0), True)[1]
+        below_strategy = compute_strategy(
+            dice_count, sides, (lambda s: 1 if s < 5 else 0))
+        above_strategy = compute_strategy(
+            dice_count, sides, (lambda s: 1 if s >= 24 else 0))
         while True:
             try:
                 roll_str = input('Input your roll: ')
