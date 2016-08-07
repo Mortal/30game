@@ -152,7 +152,7 @@ def my_utility(s):
         return strictly_below
     elif s < 24:
         # return 24 - s
-        return lose * (24 - s)
+        return lose * min(10, (24 - s))
     elif s == 24:
         return dead_on
     else:
