@@ -144,7 +144,7 @@ def my_utility(s):
     lose = -1
     strictly_below = 20
     dead_on = 6
-    above = [2, 4, 8, 14, 20, 30]
+    above = [6, 6, 8, 14, 20, 30]
 
     # "Skarpt under 11" => strictly less than 5
     # "30" => 24
