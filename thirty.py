@@ -216,6 +216,10 @@ def main():
                 continue
             if not all(1 <= v <= sides for v in roll):
                 print("Those are not the %s-sided dice I know!" % sides)
+                continue
+            if len(roll) <= 1:
+                print("Looks like you're done!")
+                continue
             min_sum = (dice_count - len(roll))
             max_sum = (dice_count - len(roll)) * sides
             roll.sort()
