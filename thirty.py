@@ -29,7 +29,7 @@ def permutations(s):
     return factorial(n) // product(map(factorial, counts.values()))
 
 
-def value(dice_count, sides, utility):
+def value(dice_count, sides, utility, full=False):
     """
     Suppose we have n k-sided dice (sides 0, 1, ..., k-1)
     and we perform the following process:
@@ -110,7 +110,11 @@ def value(dice_count, sides, utility):
         assert n_outcomes == sides ** n
 
         values.append([div(a, n_outcomes) for a in tmp_value])
-    return values[dice_count][0]
+
+    if full:
+        return values[dice_count][0], reroll_strategy
+    else:
+        return values[dice_count][0]
 
 
 if __name__ == "__main__":
