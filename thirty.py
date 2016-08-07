@@ -159,6 +159,18 @@ def my_utility(s):
         return above[s - 25]
 
 
+def describe_strategy(dice_count, sides, utility):
+    values, strategy = solve_game(dice_count, sides, utility)
+    max_sum = dice_count * sides
+    print(' '.join('%2d' % i for i in range(max_sum+1)))
+    indices = [(i, j) for i, row in enumerate(values) for j in range(len(row))]
+    indices.sort(key=lambda x: values[x[0]][x[1]])
+    for n, row in enumerate(values[:-1]):
+        print('   '*(dice_count-n) +
+              ' '.join('%02X' % (1+indices.index((n, j)))
+                       for j in range(len(row))))
+
+
 def describe_keep_reroll(dice_count, sides, strategy, roll, s):
     roll_z = [v - 1 for v in roll]
     s_z = s - (dice_count - len(roll))
@@ -184,10 +196,14 @@ def describe_keep_reroll(dice_count, sides, strategy, roll, s):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--infiniplay', action='store_true')
+    parser.add_argument('-d', '--describe', action='store_true')
     args = parser.parse_args()
 
     dice_count = 6
     sides = 6
+    if args.describe:
+        describe_strategy(dice_count, sides, my_utility)
+        return
     v, strategy = solve_game(dice_count, sides, my_utility)
 
     if args.infiniplay:
