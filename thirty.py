@@ -173,6 +173,50 @@ def main():
             n_tries += 1
             print("Utility: %s. Played %s games, average utility %.2f" %
                   (my_utility(s), n_tries, sum_utility / n_tries))
+    else:
+        below_strategy = value(
+            dice_count, sides, (lambda s: 1 if s < 5 else 0), True)[1]
+        above_strategy = value(
+            dice_count, sides, (lambda s: 1 if s >= 24 else 0), True)[1]
+        while True:
+            try:
+                roll_str = input('Input your roll: ')
+            except KeyboardInterrupt:
+                print('')
+                break
+            try:
+                roll = [int(v) for v in roll_str.split()]
+            except ValueError:
+                print("Hmm, try again.")
+                continue
+            if len(roll) > dice_count:
+                print("You can only roll %s dice at a time!" % dice_count)
+                continue
+            if not all(1 <= v <= sides for v in roll):
+                print("Those are not the %s-sided dice I know!" % sides)
+            min_sum = (dice_count - len(roll))
+            max_sum = (dice_count - len(roll)) * sides
+            roll.sort()
+            roll_z = [v - 1 for v in roll]
+            rerolls = [
+                strategy(roll_z, s - min_sum)[0]
+                for s in range(min_sum, max_sum + 1)]
+            if min_sum == max_sum:
+                reroll, = rerolls
+                print("I would reroll %s" %
+                      ([v + 1 for v in reroll] or 'nothing'))
+                _, below_prob = below_strategy(roll_z)
+                _, above_prob = above_strategy(roll_z)
+                print(("If you decide to go under, your chance is {:.2%}.\n" +
+                       "Otherwise, your chance is {:.2%}.").format(
+                           float(below_prob), float(above_prob)))
+            else:
+                i = min_sum
+                for reroll, ss in itertools.groupby(rerolls):
+                    j = i + len(list(ss))
+                    print("If you have between %s and %s, I would reroll %s" %
+                          (i, j - 1, [v + 1 for v in reroll] or 'nothing'))
+                    i = j
 
 
 if __name__ == "__main__":
