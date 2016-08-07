@@ -163,12 +163,11 @@ def describe_strategy(dice_count, sides, utility):
     values, strategy = solve_game(dice_count, sides, utility)
     max_sum = dice_count * sides
     print(' '.join('%2d' % i for i in range(max_sum+1)))
-    indices = [(i, j) for i, row in enumerate(values) for j in range(len(row))]
-    indices.sort(key=lambda x: values[x[0]][x[1]])
+    v_sort = sorted(set(v for row in values for v in row))
     for n, row in enumerate(values[:-1]):
         print('   '*(dice_count-n) +
-              ' '.join('%02X' % (1+indices.index((n, j)))
-                       for j in range(len(row))))
+              ' '.join('%02d' % v_sort.index(v)
+                       for v in row))
 
 
 def describe_keep_reroll(dice_count, sides, strategy, roll, s):
