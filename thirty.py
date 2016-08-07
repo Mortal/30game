@@ -1,3 +1,4 @@
+import random
 import operator
 import fractions
 import itertools
@@ -115,6 +116,27 @@ def value(dice_count, sides, utility, full=False):
         return values[dice_count][0], reroll_strategy
     else:
         return values[dice_count][0]
+
+
+def play_game(dice_count, sides, strategy):
+    outcome = sorted(random.randrange(sides) for _ in range(dice_count))
+    s = 0
+    while outcome:
+        print("Sum: %2d  You roll: %s -> %s" %
+              (s + dice_count - len(outcome),
+               [a + 1 for a in outcome],
+               s + dice_count + sum(outcome)))
+        reroll, value = strategy(outcome, s)
+        outcome_sum = sum(outcome)
+        reroll_sum = sum(reroll)
+        keep_sum = outcome_sum - reroll_sum
+        s += keep_sum
+        if reroll:
+            print("Sum: %2d  You chose to reroll: %s" %
+                  (s + dice_count - len(reroll),
+                   [a + 1 for a in reroll]))
+        outcome = sorted(random.randrange(sides) for _ in range(len(reroll)))
+    return s
 
 
 if __name__ == "__main__":
