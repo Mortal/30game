@@ -82,12 +82,7 @@ def value(dice_count, sides, utility, full=False):
             # Suppose we had already accumulated "s",
             # and now we keep another "keep_sum"
             # and reroll the "reroll" dice.
-            try:
-                v = values[len(reroll)][s + keep_sum]
-            except IndexError:
-                print(len(reroll), len(values))
-                print(s, outcome_sum, reroll_sum, keep_sum, s + keep_sum, len(values[len(reroll)]))
-                raise
+            v = values[len(reroll)][s + keep_sum]
             if best_reroll is None or best < v:
                 best_reroll = reroll
                 best = v
