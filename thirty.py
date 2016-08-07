@@ -1,4 +1,5 @@
 import random
+import argparse
 import operator
 import fractions
 import itertools
@@ -154,19 +155,24 @@ def my_utility(s):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '--infiniplay', action='store_true')
+    args = parser.parse_args()
+
     dice_count = 6
     sides = 6
     v, strategy = value(dice_count, sides, my_utility, True)
     print("Expected utility: %s = %.2f" % (v, float(v)))
 
-    sum_utility = 0
-    n_tries = 0
-    while True:
-        s = play_game(dice_count, sides, strategy)
-        sum_utility += my_utility(s)
-        n_tries += 1
-        print("Utility: %s. Played %s games, average utility %.2f" %
-              (my_utility(s), n_tries, sum_utility / n_tries))
+    if args.infiniplay:
+        sum_utility = 0
+        n_tries = 0
+        while True:
+            s = play_game(dice_count, sides, strategy)
+            sum_utility += my_utility(s)
+            n_tries += 1
+            print("Utility: %s. Played %s games, average utility %.2f" %
+                  (my_utility(s), n_tries, sum_utility / n_tries))
 
 
 if __name__ == "__main__":
