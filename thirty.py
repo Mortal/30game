@@ -59,33 +59,53 @@ def value(dice_count, sides, utility):
     # How do you divide two numbers?
     div = fractions.Fraction
 
+    # What can we do with an outcome on n dice?
+    # Reroll the first m (0 <= m < n) or the last m (1 <= m < n).
+    rerolls = [
+        [slice(0, m) for m in range(n)] +
+        [slice(m, n) for m in range(1, n)]
+        for n in range(dice_count + 1)]
+
+    def reroll_strategy(outcome, s=0):
+        """
+        "outcome" is a list of length [1, dice_count] with die faces in sorted
+        order. Returns (reroll, value) where "reroll" is a subset of the dice
+        and "value" is the expected utility.
+        """
+        outcome_sum = sum(outcome)
+        best_reroll = best = None
+        for reroll_slice in rerolls[len(outcome)]:
+            reroll = outcome[reroll_slice]
+            reroll_sum = sum(reroll)
+            keep_sum = outcome_sum - reroll_sum
+            # Suppose we had already accumulated "s",
+            # and now we keep another "keep_sum"
+            # and reroll the "reroll" dice.
+            try:
+                v = values[len(reroll)][s + keep_sum]
+            except IndexError:
+                print(len(reroll), len(values))
+                print(s, outcome_sum, reroll_sum, keep_sum, s + keep_sum, len(values[len(reroll)]))
+                raise
+            if best_reroll is None or best < v:
+                best_reroll = reroll
+                best = v
+        return best_reroll, best
+
     for n in range(1, dice_count+1):
         # What might the accumulated sum be at most with n dice remaining?
         max_sum = (dice_count - n) * (sides - 1)
         # At the end, tmp_value[s] will be k**n times the expected utility.
         tmp_value = [0 for s in range(max_sum + 1)]
-        # What can we do with an outcome?
-        # Reroll the first m (0 <= m < n) or the last m (1 <= m < n).
-        rerolls = ([slice(0, m) for m in range(n)] +
-                   [slice(m, n) for m in range(1, n)])
 
         outcomes = itertools.combinations_with_replacement(range(sides), n)
         n_outcomes = 0
         for outcome in outcomes:
-            outcome_sum = sum(outcome)
             multiplicity = permutations(outcome)
             n_outcomes += multiplicity
             for s in range(0, max_sum + 1):
-                best = min(values[0])
-                for reroll_slice in rerolls:
-                    reroll = outcome[reroll_slice]
-                    reroll_sum = sum(reroll)
-                    keep_sum = outcome_sum - reroll_sum
-                    # Suppose we had already accumulated "s",
-                    # and now we keep another "keep_sum"
-                    # and reroll the "reroll" dice.
-                    best = max(best, values[len(reroll)][s + keep_sum])
-                tmp_value[s] += multiplicity * best
+                reroll, reroll_value = reroll_strategy(outcome, s)
+                tmp_value[s] += multiplicity * reroll_value
 
         assert n_outcomes == sides ** n
 
