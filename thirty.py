@@ -211,8 +211,11 @@ def main():
             except KeyboardInterrupt:
                 print('')
                 break
+            roll_split = roll_str.split()
+            if len(roll_split) == 1:
+                roll_split = list(roll_split[0])
             try:
-                roll = [int(v) for v in roll_str.split()]
+                roll = [int(v) for v in roll_split]
             except ValueError:
                 print("Hmm, try again.")
                 continue
