@@ -225,12 +225,12 @@ def main():
             roll.sort()
             roll_z = [v - 1 for v in roll]
             rerolls = [
-                strategy(roll_z, s - min_sum)[0]
+                describe_keep_reroll(
+                    dice_count, sides, strategy, roll, s)
                 for s in range(min_sum, max_sum + 1)]
             if min_sum == max_sum:
                 reroll, = rerolls
-                print("I would reroll %s" %
-                      ([v + 1 for v in reroll] or 'nothing'))
+                print("I would %s" % reroll)
                 _, below_prob = below_strategy(roll_z)
                 _, above_prob = above_strategy(roll_z)
                 print(("If you decide to go under, your chance is {:.2%}.\n" +
@@ -240,8 +240,8 @@ def main():
                 i = min_sum
                 for reroll, ss in itertools.groupby(rerolls):
                     j = i + len(list(ss))
-                    print("If you have between %s and %s, I would reroll %s" %
-                          (i, j - 1, [v + 1 for v in reroll] or 'nothing'))
+                    print("If you have between %s and %s, I would %s" %
+                          (i, j - 1, reroll))
                     i = j
 
 
