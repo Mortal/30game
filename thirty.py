@@ -71,6 +71,37 @@ def compute_values(dice_count, sides, strategy, utility,
     return values
 
 
+def optimizing_strategy(dice_count, values):
+    # What can we do with an outcome on n dice?
+    # Reroll the first m (0 <= m < n) or the last m (1 <= m < n).
+    rerolls = [
+        [slice(0, m) for m in range(n)] +
+        [slice(m, n) for m in range(1, n)]
+        for n in range(dice_count + 1)]
+
+    def reroll_strategy(outcome, current_sum=0):
+        """
+        "outcome" is a list of length [1, dice_count] with dice in sorted
+        order. Returns the subset of the dice to reroll.
+        """
+        outcome_sum = sum(outcome)
+        best_reroll = best_value = None
+        for reroll_slice in rerolls[len(outcome)]:
+            reroll_sum = sum(outcome[reroll_slice])
+            reroll_count = reroll_slice.stop - reroll_slice.start
+            keep_sum = outcome_sum - reroll_sum
+            # Suppose we had already accumulated "current_sum",
+            # and now we keep another "keep_sum"
+            # and reroll the "reroll_count" dice.
+            reroll_value = values[reroll_count][current_sum + keep_sum]
+            if best_reroll is None or best_value < reroll_value:
+                best_reroll = reroll_slice
+                best_value = reroll_value
+        return outcome[best_reroll]
+
+    return reroll_strategy
+
+
 def solve_game(dice_count, sides, utility):
     """
     Suppose we have n k-sided dice (sides 0, 1, ..., k-1)
@@ -98,32 +129,7 @@ def solve_game(dice_count, sides, utility):
     # Fill out "values" for n = 0 using the utility function.
     values.append([utility(s) for s in range(dice_count * (sides-1) + 1)])
 
-    # What can we do with an outcome on n dice?
-    # Reroll the first m (0 <= m < n) or the last m (1 <= m < n).
-    rerolls = [
-        [slice(0, m) for m in range(n)] +
-        [slice(m, n) for m in range(1, n)]
-        for n in range(dice_count + 1)]
-
-    def reroll_strategy(outcome, current_sum=0):
-        """
-        "outcome" is a list of length [1, dice_count] with dice in sorted
-        order. Returns the subset of the dice to reroll.
-        """
-        outcome_sum = sum(outcome)
-        best_reroll = best_value = None
-        for reroll_slice in rerolls[len(outcome)]:
-            reroll_sum = sum(outcome[reroll_slice])
-            reroll_count = reroll_slice.stop - reroll_slice.start
-            keep_sum = outcome_sum - reroll_sum
-            # Suppose we had already accumulated "current_sum",
-            # and now we keep another "keep_sum"
-            # and reroll the "reroll_count" dice.
-            reroll_value = values[reroll_count][current_sum + keep_sum]
-            if best_reroll is None or best_value < reroll_value:
-                best_reroll = reroll_slice
-                best_value = reroll_value
-        return outcome[best_reroll]
+    reroll_strategy = optimizing_strategy(dice_count, values)
 
     for n in range(1, dice_count+1):
         values.append(compute_values_single_row(
