@@ -327,6 +327,33 @@ def roll_value_fixed(dice_count, sides, strategy, utility):
     return roll_value_function(values, strategy)
 
 
+def input_roll(dice_count, sides, input=input):
+    while True:
+        try:
+            roll_str = input('Input your roll: ')
+        except (KeyboardInterrupt, EOFError):
+            print('')
+            break
+        roll_split = roll_str.split()
+        if len(roll_split) == 1:
+            roll_split = list(roll_split[0])
+        try:
+            roll = [int(v) for v in roll_split]
+        except ValueError:
+            print("Hmm, try again.")
+            continue
+        if len(roll) > dice_count:
+            print("You can only roll %s dice at a time!" % dice_count)
+            continue
+        if not all(1 <= v <= sides for v in roll):
+            print("Those are not the %s-sided dice I know!" % sides)
+            continue
+        if len(roll) <= 1:
+            print("Looks like you're done!")
+            continue
+        return roll
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--infiniplay', action='store_true')
@@ -388,28 +415,7 @@ def main():
         below_prob = roll_value_fixed(dice_count, sides, strategy, is_below)
         above_prob = roll_value_fixed(dice_count, sides, strategy, is_above)
         while True:
-            try:
-                roll_str = input('Input your roll: ')
-            except (KeyboardInterrupt, EOFError):
-                print('')
-                break
-            roll_split = roll_str.split()
-            if len(roll_split) == 1:
-                roll_split = list(roll_split[0])
-            try:
-                roll = [int(v) for v in roll_split]
-            except ValueError:
-                print("Hmm, try again.")
-                continue
-            if len(roll) > dice_count:
-                print("You can only roll %s dice at a time!" % dice_count)
-                continue
-            if not all(1 <= v <= sides for v in roll):
-                print("Those are not the %s-sided dice I know!" % sides)
-                continue
-            if len(roll) <= 1:
-                print("Looks like you're done!")
-                continue
+            roll = input_roll(dice_count, sides)
             min_sum = (dice_count - len(roll))
             max_sum = (dice_count - len(roll)) * sides
             roll.sort()
