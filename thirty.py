@@ -193,8 +193,7 @@ def my_utility(s):
         return above[s - 25]
 
 
-def describe_strategy(dice_count, sides, utility):
-    values, strategy = solve_game(dice_count, sides, utility)
+def describe_strategy(dice_count, sides, values):
     max_sum = dice_count * sides
     print(' '.join('%2d' % i for i in range(max_sum+1)))
     v_sort = sorted(set(v for row in values for v in row))
@@ -234,12 +233,11 @@ def main():
 
     dice_count = 6
     sides = 6
-    if args.describe:
-        describe_strategy(dice_count, sides, my_utility)
-        return
     values, strategy = solve_game(dice_count, sides, my_utility)
 
-    if args.infiniplay:
+    if args.describe:
+        describe_strategy(dice_count, sides, values)
+    elif args.infiniplay:
         v = values[dice_count][0]
         print("Expected utility: %s = %.2f" % (v, float(v)))
         sum_utility = 0
