@@ -231,6 +231,16 @@ def describe_keep_reroll(dice_count, sides, strategy, roll, s):
         return 'reroll %s' % ' '.join(map(str, reroll))
 
 
+def roll_value_optimal(dice_count, sides, utility):
+    values, strategy = solve_game(dice_count, sides, utility)
+    return roll_value_function(values, strategy)
+
+
+def roll_value_fixed(dice_count, sides, strategy, utility):
+    values = compute_values(dice_count, sides, strategy, utility)
+    return roll_value_function(values, strategy)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--infiniplay', action='store_true')
@@ -259,18 +269,10 @@ def main():
     else:
         is_below = lambda s: 1 if s < 5 else 0  # noqa
         is_above = lambda s: 1 if s >= 24 else 0  # noqa
-        below_max_values, below_max_strategy = solve_game(
-            dice_count, sides, is_below)
-        below_max_prob = roll_value_function(
-            below_max_values, below_max_strategy)
-        above_max_values, above_max_strategy = solve_game(
-            dice_count, sides, is_above)
-        above_max_prob = roll_value_function(
-            above_max_values, above_max_strategy)
-        below_values = compute_values(dice_count, sides, strategy, is_below)
-        below_prob = roll_value_function(below_values, strategy)
-        above_values = compute_values(dice_count, sides, strategy, is_above)
-        above_prob = roll_value_function(above_values, strategy)
+        below_max_prob = roll_value_optimal(dice_count, sides, is_below)
+        above_max_prob = roll_value_optimal(dice_count, sides, is_above)
+        below_prob = roll_value_fixed(dice_count, sides, strategy, is_below)
+        above_prob = roll_value_fixed(dice_count, sides, strategy, is_above)
         while True:
             try:
                 roll_str = input('Input your roll: ')
