@@ -323,11 +323,26 @@ def describe_strategy(dice_count, sides, values):
               ' '.join('%02d' % v_sort.index(v)
                        for v in row))
     print("On first roll, do the first possible:")
+    seen = set()
     for v in reversed(v_sort):
-        dice = [(dice_count - n, s)
-                for n in range(dice_count)
-                for s in range(len(values[n]))
-                if values[n][s] == v]
+        rerolls = [(n, s)
+                   for n in range(dice_count)
+                   for s in range(len(values[n]))
+                   if values[n][s] == v]
+        all_dice = [(dice_count - n, s) for n, s in rerolls]
+        dice = []
+        for n, s in all_dice:
+            # Have all the possible ways of rolling n dice making s
+            # already been covered by the strategy?
+            all_seen_before = all(
+                any((len(ss), sum(ss)) in seen
+                    for ss in subsequences(outcome))
+                for outcome in combinations_summing_to(sides, n, s))
+            if not all_seen_before:
+                seen.add((n, s))
+                dice.append((n, s))
+        if not dice:
+            continue
         p = min(max(below_max_prob[dice_count - n][s],
                     above_max_prob[dice_count - n][s])
                 for n, s in dice)
