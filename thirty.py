@@ -166,12 +166,25 @@ def probability_to_reach(n, dice_count, sides, target, s=0,
     return div(n_successes, sides ** n), good_outcomes
 
 
+def ensure_numeric(f):
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        v = f(*args, **kwargs)
+        if isinstance(v, bool):
+            return int(v)
+        else:
+            return v
+
+    return wrapper
+
+
 def compute_values(dice_count, sides, strategy, utility,
                    div=fractions.Fraction):
     # values[n][s] == v means that for n remaining dice,
     # accumulated sum s, the expected utility is v.
     values = []
     # Fill out "values" for n = 0 using the utility function.
+    utility = ensure_numeric(utility)
     values.append([utility(s) for s in range(dice_count * (sides-1) + 1)])
     for n in range(1, dice_count + 1):
         values.append(compute_values_single_row(
@@ -235,6 +248,7 @@ def solve_game(dice_count, sides, utility):
     values = []
 
     # Fill out "values" for n = 0 using the utility function.
+    utility = ensure_numeric(utility)
     values.append([utility(s) for s in range(dice_count * (sides-1) + 1)])
 
     reroll_strategy = optimizing_strategy(dice_count, values)
