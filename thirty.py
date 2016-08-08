@@ -385,13 +385,13 @@ def describe_strategy(dice_count, sides, values):
                 dice.append((n, s))
         if not dice:
             continue
-        p = min(max(below_max_prob[dice_count - n][s],
-                    above_max_prob[dice_count - n][s])
-                for n, s in dice)
+        p_win = min(max(below_max_prob[dice_count - n][s],
+                        above_max_prob[dice_count - n][s])
+                    for n, s in dice)
         print('%02d: keep %s (%.2f%%)' %
               (v_sort.index(v),
                describe_choices(sides, dice),
-               float(100*p)))
+               float(100*p_win)))
 
 
 def describe_keep_reroll(dice_count, sides, strategy, roll, s):
