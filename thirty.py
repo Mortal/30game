@@ -511,6 +511,7 @@ def main():
     parser.add_argument('-d', '--describe', action='store_true')
     parser.add_argument('-l', '--lucky', action='store_true')
     parser.add_argument('-m', '--minimax', action='store_true')
+    parser.add_argument('-s', '--self-defense', action='store_true')
     args = parser.parse_args()
 
     dice_count = 6
@@ -556,6 +557,13 @@ def main():
         values = values_zip(
             values_max(below_values, above_values), utility_values)
         strategy = optimizing_strategy(dice_count, values)
+        utility_values = compute_values(dice_count, sides, strategy, my_utility)
+    elif args.self_defense:
+        print("Compute self-defense strategy for %d %d-sided dice..." %
+              (dice_count, sides))
+        max_lose = 14
+        score = lambda s: max(-max_lose, s - 24) if 5 <= s < 24 else 0
+        values, strategy = solve_game(dice_count, sides, score)
         utility_values = compute_values(dice_count, sides, strategy, my_utility)
     else:
         print("Compute utility-maximizing strategy for %d %d-sided dice..." %
