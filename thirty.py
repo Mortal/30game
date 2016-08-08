@@ -520,6 +520,9 @@ def main():
     elif args.infiniplay:
         v = values[dice_count][0]
         print("Expected utility: %s = %.2f" % (v, float(v)))
+        print("Probability of winning: {:.2%}".format(
+            compute_value(dice_count, sides, strategy, is_win,
+                          operator.truediv)))
         sum_utility = 0
         n_tries = 0
         while True:
