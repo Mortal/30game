@@ -35,11 +35,15 @@ def outcomes(sides, dice_count):
     outcomes = itertools.combinations_with_replacement(
         range(sides), dice_count)
     n_outcomes = 0
+    n_distinct = 0
     for outcome in outcomes:
         multiplicity = permutations(outcome)
         n_outcomes += multiplicity
+        n_distinct += 1
         yield outcome, multiplicity
     assert n_outcomes == sides ** dice_count
+    assert n_distinct == (factorial(dice_count + sides-1) //
+                          (factorial(dice_count) * factorial(sides-1)))
 
 
 def combinations_summing_to(sides, dice_count, s, suffix=()):
