@@ -31,6 +31,18 @@ def permutations(s):
     return factorial(n) // product(map(factorial, counts.values()))
 
 
+def outcomes(sides, dice_count):
+    outcomes = itertools.combinations_with_replacement(
+        range(sides), dice_count)
+    n_outcomes = 0
+    for outcome in outcomes:
+        outcome_sum = sum(outcome)
+        multiplicity = permutations(outcome)
+        n_outcomes += multiplicity
+        yield outcome, multiplicity
+    assert n_outcomes == sides ** dice_count
+
+
 def compute_values_single_row(n, dice_count, sides, strategy, values,
                               div=fractions.Fraction):
     assert len(values) >= n-1
@@ -40,20 +52,13 @@ def compute_values_single_row(n, dice_count, sides, strategy, values,
     # At the end, tmp_value[s] will be k**n times the expected utility.
     tmp_value = [0 for s in range(max_sum + 1)]
 
-    outcomes = itertools.combinations_with_replacement(range(sides), n)
-    n_outcomes = 0
-    for outcome in outcomes:
-        outcome_sum = sum(outcome)
-        multiplicity = permutations(outcome)
-        n_outcomes += multiplicity
+    for outcome, multiplicity in outcomes(sides, n):
         for s in range(0, max_sum + 1):
             reroll = strategy(outcome, s)
             reroll_sum = sum(reroll)
             keep_sum = outcome_sum - reroll_sum
             reroll_value = values[len(reroll)][s + keep_sum]
             tmp_value[s] += multiplicity * reroll_value
-
-    assert n_outcomes == sides ** n
 
     return [div(a, n_outcomes) for a in tmp_value]
 
