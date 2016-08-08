@@ -202,7 +202,7 @@ def my_utility(s):
 def describe_strategy(dice_count, sides, values):
     max_sum = dice_count * sides
     print(' '.join('%2d' % i for i in range(max_sum+1)))
-    v_sort = sorted(set(v for row in values for v in row))
+    v_sort = sorted(set(v for row in values[0:dice_count] for v in row))
     for n, row in enumerate(values[:-1]):
         print('   '*(dice_count-n) +
               ' '.join('%02d' % v_sort.index(v)
