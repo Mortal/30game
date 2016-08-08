@@ -31,8 +31,8 @@ def permutations(s):
     return factorial(n) // product(map(factorial, counts.values()))
 
 
-def compute_values(n, dice_count, sides, strategy, values,
-                   div=fractions.Fraction):
+def compute_values_single_row(n, dice_count, sides, strategy, values,
+                              div=fractions.Fraction):
     assert len(values) >= n-1
     # What might the accumulated sum be at most with n dice remaining?
     max_sum = (dice_count - n) * (sides - 1)
@@ -112,7 +112,7 @@ def solve_game(dice_count, sides, utility):
         return best_reroll
 
     for n in range(1, dice_count+1):
-        values.append(compute_values(
+        values.append(compute_values_single_row(
             n, dice_count, sides, reroll_strategy, values))
 
     return values, reroll_strategy
