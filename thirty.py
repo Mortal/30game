@@ -58,6 +58,19 @@ def compute_values_single_row(n, dice_count, sides, strategy, values,
     return [div(a, n_outcomes) for a in tmp_value]
 
 
+def compute_values(dice_count, sides, strategy, utility,
+                   div=fractions.Fraction):
+    # values[n][s] == v means that for n remaining dice,
+    # accumulated sum s, the expected utility is v.
+    values = []
+    # Fill out "values" for n = 0 using the utility function.
+    values.append([utility(s) for s in range(dice_count * (sides-1) + 1)])
+    for n in range(1, dice_count + 1):
+        values.append(compute_values_single_row(
+            n, dice_count, sides, strategy, values, div=div))
+    return values
+
+
 def solve_game(dice_count, sides, utility):
     """
     Suppose we have n k-sided dice (sides 0, 1, ..., k-1)
