@@ -143,10 +143,12 @@ def play_game(dice_count, sides, strategy):
 
 
 def my_utility(s):
-    lose = -1
-    strictly_below = 20
-    dead_on = 6
-    above = [6, 6, 8, 14, 20, 30]
+    opponents = 3
+    lose_factor = -1
+    max_lose = 14
+    strictly_below = 10 * opponents
+    dead_on = 2 * opponents
+    above = [4, 8, 12, 16, 20, 24]
 
     # "Skarpt under 11" => strictly less than 5
     # "30" => 24
@@ -154,7 +156,7 @@ def my_utility(s):
         return strictly_below
     elif s < 24:
         # return 24 - s
-        return lose * min(10, (24 - s))
+        return lose_factor * min(max_lose, (24 - s))
     elif s == 24:
         return dead_on
     else:
