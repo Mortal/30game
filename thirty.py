@@ -438,8 +438,13 @@ def main():
                 i = min_sum
                 for reroll, ss in itertools.groupby(rerolls):
                     j = i + len(list(ss))
-                    print("If you have between %s and %s, I would %s" %
-                          (i, j - 1, reroll))
+                    if i == min_sum and j == max_sum + 1:
+                        print("I would %s" % reroll)
+                    elif i == j - 1:
+                        print("If you have %s, I would %s" % (i, reroll))
+                    else:
+                        print("If you have between %s and %s, I would %s" %
+                              (i, j - 1, reroll))
                     i = j
 
 
