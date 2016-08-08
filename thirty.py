@@ -36,7 +36,6 @@ def outcomes(sides, dice_count):
         range(sides), dice_count)
     n_outcomes = 0
     for outcome in outcomes:
-        outcome_sum = sum(outcome)
         multiplicity = permutations(outcome)
         n_outcomes += multiplicity
         yield outcome, multiplicity
@@ -53,6 +52,7 @@ def compute_values_single_row(n, dice_count, sides, strategy, values,
     tmp_value = [0 for s in range(max_sum + 1)]
 
     for outcome, multiplicity in outcomes(sides, n):
+        outcome_sum = sum(outcome)
         for s in range(0, max_sum + 1):
             reroll = strategy(outcome, s)
             reroll_sum = sum(reroll)
