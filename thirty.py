@@ -39,7 +39,7 @@ def solve_game(dice_count, sides, utility):
     remembering the sum.  As long as you still have dice left, throw the
     remaining dice, and take out a non-empty subset of them, adding up their
     sum with what you already put aside.
-    When you have no more dice, you have a resulting sum (between 0 and n*(k-1))
+    When you have no more dice, you have a resulting sum between 0 and n*(k-1)
     and you win utility(sum).
     What is the expected utility of the optimal strategy?
 
