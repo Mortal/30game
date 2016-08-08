@@ -31,7 +31,9 @@ def permutations(s):
     return factorial(n) // product(map(factorial, counts.values()))
 
 
-def compute_values(n, dice_count, sides, strategy, div=fractions.Fraction):
+def compute_values(n, dice_count, sides, strategy, values,
+                   div=fractions.Fraction):
+    assert len(values) >= n-1
     # What might the accumulated sum be at most with n dice remaining?
     max_sum = (dice_count - n) * (sides - 1)
     # At the end, tmp_value[s] will be k**n times the expected utility.
@@ -40,10 +42,14 @@ def compute_values(n, dice_count, sides, strategy, div=fractions.Fraction):
     outcomes = itertools.combinations_with_replacement(range(sides), n)
     n_outcomes = 0
     for outcome in outcomes:
+        outcome_sum = sum(outcome)
         multiplicity = permutations(outcome)
         n_outcomes += multiplicity
         for s in range(0, max_sum + 1):
-            reroll, reroll_value = strategy(outcome, s)
+            reroll = strategy(outcome, s)
+            reroll_sum = sum(reroll)
+            keep_sum = outcome_sum - reroll_sum
+            reroll_value = values[len(reroll)][s + keep_sum]
             tmp_value[s] += multiplicity * reroll_value
 
     assert n_outcomes == sides ** n
@@ -87,12 +93,11 @@ def solve_game(dice_count, sides, utility):
 
     def reroll_strategy(outcome, s=0):
         """
-        "outcome" is a list of length [1, dice_count] with die faces in sorted
-        order. Returns (reroll, value) where "reroll" is a subset of the dice
-        and "value" is the expected utility.
+        "outcome" is a list of length [1, dice_count] with dice in sorted
+        order. Returns the subset of the dice to reroll.
         """
         outcome_sum = sum(outcome)
-        best_reroll = best = None
+        best_reroll = best_value = None
         for reroll_slice in rerolls[len(outcome)]:
             reroll = outcome[reroll_slice]
             reroll_sum = sum(reroll)
@@ -100,15 +105,15 @@ def solve_game(dice_count, sides, utility):
             # Suppose we had already accumulated "s",
             # and now we keep another "keep_sum"
             # and reroll the "reroll" dice.
-            v = values[len(reroll)][s + keep_sum]
-            if best_reroll is None or best < v:
+            reroll_value = values[len(reroll)][s + keep_sum]
+            if best_reroll is None or best_value < reroll_value:
                 best_reroll = reroll
-                best = v
-        return best_reroll, best
+                best_value = reroll_value
+        return best_reroll
 
     for n in range(1, dice_count+1):
         values.append(compute_values(
-            n, dice_count, sides, reroll_strategy))
+            n, dice_count, sides, reroll_strategy, values))
 
     return values, reroll_strategy
 
@@ -121,6 +126,17 @@ def compute_strategy(dice_count, sides, utility):
     return solve_game(dice_count, sides, utility)[1]
 
 
+def roll_value_function(values, strategy):
+    def roll_value(roll_z):
+        roll_sum = sum(roll_z)
+        reroll = strategy(roll_z)
+        reroll_sum = sum(reroll)
+        keep_sum = roll_sum - reroll_sum
+        return values[len(reroll)][keep_sum]
+
+    return roll_value
+
+
 def play_game(dice_count, sides, strategy):
     outcome = sorted(random.randrange(sides) for _ in range(dice_count))
     s = 0
@@ -129,7 +145,7 @@ def play_game(dice_count, sides, strategy):
               (s + dice_count - len(outcome),
                [a + 1 for a in outcome],
                s + dice_count + sum(outcome)))
-        reroll, value = strategy(outcome, s)
+        reroll = strategy(outcome, s)
         outcome_sum = sum(outcome)
         reroll_sum = sum(reroll)
         keep_sum = outcome_sum - reroll_sum
@@ -177,7 +193,7 @@ def describe_strategy(dice_count, sides, utility):
 def describe_keep_reroll(dice_count, sides, strategy, roll, s):
     roll_z = [v - 1 for v in roll]
     s_z = s - (dice_count - len(roll))
-    reroll_z = strategy(roll_z, s_z)[0]
+    reroll_z = strategy(roll_z, s_z)
     reroll = [v + 1 for v in reroll_z]
 
     roll_hist = collections.Counter(roll)
@@ -220,14 +236,16 @@ def main():
             print("Utility: %s. Played %s games, average utility %.2f" %
                   (my_utility(s), n_tries, sum_utility / n_tries))
     else:
-        below_strategy = compute_strategy(
+        below_values, below_strategy = solve_game(
             dice_count, sides, (lambda s: 1 if s < 5 else 0))
-        above_strategy = compute_strategy(
+        below_utility = roll_value_function(below_values, below_strategy)
+        above_values, above_strategy = solve_game(
             dice_count, sides, (lambda s: 1 if s >= 24 else 0))
+        above_utility = roll_value_function(above_values, above_strategy)
         while True:
             try:
                 roll_str = input('Input your roll: ')
-            except KeyboardInterrupt:
+            except (KeyboardInterrupt, EOFError):
                 print('')
                 break
             roll_split = roll_str.split()
@@ -258,8 +276,8 @@ def main():
             if min_sum == max_sum:
                 reroll, = rerolls
                 print("I would %s" % reroll)
-                _, below_prob = below_strategy(roll_z)
-                _, above_prob = above_strategy(roll_z)
+                below_prob = below_utility(roll_z)
+                above_prob = above_utility(roll_z)
                 print(("If you decide to go under, your chance is {:.2%}.\n" +
                        "Otherwise, your chance is {:.2%}.").format(
                            float(below_prob), float(above_prob)))
