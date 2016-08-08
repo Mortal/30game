@@ -237,9 +237,10 @@ def main():
     if args.describe:
         describe_strategy(dice_count, sides, my_utility)
         return
-    v, strategy = solve_game(dice_count, sides, my_utility)
+    values, strategy = solve_game(dice_count, sides, my_utility)
 
     if args.infiniplay:
+        v = values[dice_count][0]
         print("Expected utility: %s = %.2f" % (v, float(v)))
         sum_utility = 0
         n_tries = 0
