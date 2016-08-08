@@ -484,7 +484,7 @@ def input_roll(dice_count, sides, input=input):
             roll_str = input('Input your roll: ')
         except (KeyboardInterrupt, EOFError):
             print('')
-            break
+            raise SystemExit()
         roll_split = roll_str.split()
         if len(roll_split) == 1:
             roll_split = list(roll_split[0])
