@@ -31,6 +31,26 @@ def permutations(s):
     return factorial(n) // product(map(factorial, counts.values()))
 
 
+def compute_values(n, dice_count, sides, strategy, div=fractions.Fraction):
+    # What might the accumulated sum be at most with n dice remaining?
+    max_sum = (dice_count - n) * (sides - 1)
+    # At the end, tmp_value[s] will be k**n times the expected utility.
+    tmp_value = [0 for s in range(max_sum + 1)]
+
+    outcomes = itertools.combinations_with_replacement(range(sides), n)
+    n_outcomes = 0
+    for outcome in outcomes:
+        multiplicity = permutations(outcome)
+        n_outcomes += multiplicity
+        for s in range(0, max_sum + 1):
+            reroll, reroll_value = strategy(outcome, s)
+            tmp_value[s] += multiplicity * reroll_value
+
+    assert n_outcomes == sides ** n
+
+    return [div(a, n_outcomes) for a in tmp_value]
+
+
 def solve_game(dice_count, sides, utility):
     """
     Suppose we have n k-sided dice (sides 0, 1, ..., k-1)
@@ -57,9 +77,6 @@ def solve_game(dice_count, sides, utility):
 
     # Fill out "values" for n = 0 using the utility function.
     values.append([utility(s) for s in range(dice_count * (sides-1) + 1)])
-
-    # How do you divide two numbers?
-    div = fractions.Fraction
 
     # What can we do with an outcome on n dice?
     # Reroll the first m (0 <= m < n) or the last m (1 <= m < n).
@@ -90,23 +107,8 @@ def solve_game(dice_count, sides, utility):
         return best_reroll, best
 
     for n in range(1, dice_count+1):
-        # What might the accumulated sum be at most with n dice remaining?
-        max_sum = (dice_count - n) * (sides - 1)
-        # At the end, tmp_value[s] will be k**n times the expected utility.
-        tmp_value = [0 for s in range(max_sum + 1)]
-
-        outcomes = itertools.combinations_with_replacement(range(sides), n)
-        n_outcomes = 0
-        for outcome in outcomes:
-            multiplicity = permutations(outcome)
-            n_outcomes += multiplicity
-            for s in range(0, max_sum + 1):
-                reroll, reroll_value = reroll_strategy(outcome, s)
-                tmp_value[s] += multiplicity * reroll_value
-
-        assert n_outcomes == sides ** n
-
-        values.append([div(a, n_outcomes) for a in tmp_value])
+        values.append(compute_values(
+            n, dice_count, sides, reroll_strategy))
 
     return values, reroll_strategy
 
