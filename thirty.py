@@ -63,6 +63,25 @@ def compute_values_single_row(n, dice_count, sides, strategy, values,
     return [div(a, sides ** n) for a in tmp_value]
 
 
+def probability_to_reach(n, dice_count, sides, target, s=0,
+                         div=fractions.Fraction):
+    values = [[1 if t else 0 for t in row] for row in target]
+    strategy = optimizing_strategy(dice_count, values)
+    n_successes = 0
+    good_outcomes = []
+    for outcome, multiplicity in outcomes(sides, n):
+        outcome_sum = sum(outcome)
+        reroll = strategy(outcome, s)
+        reroll_sum = sum(reroll)
+        keep_sum = outcome_sum - reroll_sum
+        reroll_value = values[len(reroll)][s + keep_sum]
+        if reroll_value:
+            good_outcomes.append((multiplicity, outcome))
+            n_successes += multiplicity
+    good_outcomes.sort()
+    return div(n_successes, sides ** n), good_outcomes
+
+
 def compute_values(dice_count, sides, strategy, utility,
                    div=fractions.Fraction):
     # values[n][s] == v means that for n remaining dice,
@@ -145,6 +164,10 @@ def solve_game(dice_count, sides, utility):
 
 def value(dice_count, sides, utility):
     return solve_game(dice_count, sides, utility)[0][dice_count][0]
+
+
+def optimal_values(dice_count, sides, utility):
+    return solve_game(dice_count, sides, utility)[0]
 
 
 def compute_strategy(dice_count, sides, utility):
@@ -308,10 +331,38 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--infiniplay', action='store_true')
     parser.add_argument('-d', '--describe', action='store_true')
+    parser.add_argument('-l', '--lucky', action='store_true')
     args = parser.parse_args()
 
     dice_count = 6
     sides = 6
+    if args.lucky:
+        is_below = lambda s: 1 if s < 5 else 0  # noqa
+        is_above = lambda s: 1 if s >= 24 else 0  # noqa
+        below_prob = optimal_values(dice_count, sides, is_below)
+        print("Probability of low success: {:.2%}".format(
+                  float(below_prob[dice_count][0])))
+        below_guaranteed = [[p == 1 for p in row] for row in below_prob]
+        below_1st, below_1st_rolls = probability_to_reach(
+            dice_count, dice_count, sides, below_guaranteed)
+        print("... in first roll: {} = {:.2%}".format(
+            below_1st, float(below_1st)))
+        for multiplicity, outcome in below_1st_rolls:
+            print("%3d * %s" %
+                  (multiplicity, ''.join(str(v+1) for v in outcome)))
+        above_prob = optimal_values(dice_count, sides, is_above)
+        print("Probability of high success: {:.2%}".format(
+                  float(above_prob[dice_count][0])))
+        above_guaranteed = [[p == 1 for p in row] for row in above_prob]
+        above_1st, above_1st_rolls = probability_to_reach(
+            dice_count, dice_count, sides, above_guaranteed)
+        print("... in first roll: {} = {:.2%}".format(
+            above_1st, float(above_1st)))
+        for multiplicity, outcome in above_1st_rolls:
+            print("%3d * %s" %
+                  (multiplicity, ''.join(str(v+1) for v in outcome)))
+        return
+
     print("Compute optimal strategy for %d %d-sided dice..." %
           (dice_count, sides))
     values, strategy = solve_game(dice_count, sides, my_utility)
