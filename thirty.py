@@ -192,6 +192,12 @@ def compute_values(dice_count, sides, strategy, utility,
     return values
 
 
+def compute_value(dice_count, sides, strategy, utility,
+                  div=fractions.Fraction):
+    values = compute_values(dice_count, sides, strategy, utility, div=div)
+    return values[dice_count][0]
+
+
 def optimizing_strategy(dice_count, values):
     # What can we do with an outcome on n dice?
     # Reroll the first m (0 <= m < n) or the last m (1 <= m < n).
@@ -221,6 +227,33 @@ def optimizing_strategy(dice_count, values):
         return outcome[best_reroll]
 
     return reroll_strategy
+
+
+def values_max(*targets):
+    values = []
+    for n in range(len(targets[0])):
+        target_rows = [target[n] for target in targets]
+        values.append([max(target[n][s] for target in targets)
+                       for s in range(len(targets[0][n]))])
+    return values
+
+
+def values_zip(*targets):
+    values = []
+    for n in range(len(targets[0])):
+        target_rows = [target[n] for target in targets]
+        values.append(list(zip(*target_rows)))
+    return values
+
+
+def optimizing_strategy_tiebreaks(*targets):
+    dice_count = len(targets[0]) - 1
+    return optimizing_strategy(dice_count, values_zip(*targets))
+
+
+def ensemble_of_optimizers(*targets):
+    dice_count = len(targets[0]) - 1
+    return optimizing_strategy(dice_count, values_max(*targets))
 
 
 def solve_game(dice_count, sides, utility):
@@ -477,6 +510,7 @@ def main():
     parser.add_argument('-p', '--infiniplay', action='store_true')
     parser.add_argument('-d', '--describe', action='store_true')
     parser.add_argument('-l', '--lucky', action='store_true')
+    parser.add_argument('-m', '--minimax', action='store_true')
     args = parser.parse_args()
 
     dice_count = 6
@@ -511,9 +545,21 @@ def main():
                   (multiplicity, ''.join(str(v+1) for v in outcome)))
         return
 
-    print("Compute optimal strategy for %d %d-sided dice..." %
-          (dice_count, sides))
-    values, strategy = solve_game(dice_count, sides, my_utility)
+    if args.minimax:
+        print("Compute minimax strategy for %d %d-sided dice..." %
+              (dice_count, sides))
+        below_values = optimal_values(dice_count, sides, is_below)
+        above_values = optimal_values(dice_count, sides, is_above)
+        #strategy = optimizing_strategy_tiebreaks(
+        #    values_max(below_values, above_values))
+        utility_values = optimal_values(dice_count, sides, my_utility)
+        strategy = optimizing_strategy_tiebreaks(
+            values_max(below_values, above_values), utility_values)
+        values = compute_values(dice_count, sides, strategy, my_utility)
+    else:
+        print("Compute utility-maximizing strategy for %d %d-sided dice..." %
+              (dice_count, sides))
+        values, strategy = solve_game(dice_count, sides, my_utility)
 
     if args.describe:
         describe_strategy(dice_count, sides, values)
