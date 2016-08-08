@@ -611,11 +611,9 @@ def main():
                 print("I would %s" % reroll)
                 print("If you decide to go under, your chance is at most " +
                       "{:.2%}.\n".format(
-                          float(below_max_prob(roll_z)),
-                          float(below_prob(roll_z))) +
+                          float(below_max_prob(roll_z))) +
                       "Otherwise, your chance is at most {:.2%}.".format(
-                          float(above_max_prob(roll_z)),
-                          float(above_prob(roll_z))))
+                          float(above_max_prob(roll_z))))
             else:
                 i = min_sum
                 for reroll, ss in itertools.groupby(rerolls):
