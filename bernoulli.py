@@ -20,6 +20,10 @@ def main():
     sides = 6
     p = fractions.Fraction(1, sides)
 
+    no_success = (1 - p) ** dice_count
+    print("Pr[no successes in first try] = %s\n= %.2f" %
+          (no_success, float(no_success)))
+
     count = [0]
     all_prob = [1]
     for n in range(1, dice_count+1):
