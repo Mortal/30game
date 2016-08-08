@@ -251,12 +251,20 @@ def main():
             print("Utility: %s. Played %s games, average utility %.2f" %
                   (my_utility(s), n_tries, sum_utility / n_tries))
     else:
-        below_values, below_strategy = solve_game(
-            dice_count, sides, (lambda s: 1 if s < 5 else 0))
-        below_utility = roll_value_function(below_values, below_strategy)
-        above_values, above_strategy = solve_game(
-            dice_count, sides, (lambda s: 1 if s >= 24 else 0))
-        above_utility = roll_value_function(above_values, above_strategy)
+        is_below = lambda s: 1 if s < 5 else 0  # noqa
+        is_above = lambda s: 1 if s >= 24 else 0  # noqa
+        below_max_values, below_max_strategy = solve_game(
+            dice_count, sides, is_below)
+        below_max_prob = roll_value_function(
+            below_max_values, below_max_strategy)
+        above_max_values, above_max_strategy = solve_game(
+            dice_count, sides, is_above)
+        above_max_prob = roll_value_function(
+            above_max_values, above_max_strategy)
+        below_values = compute_values(dice_count, sides, strategy, is_below)
+        below_prob = roll_value_function(below_values, strategy)
+        above_values = compute_values(dice_count, sides, strategy, is_above)
+        above_prob = roll_value_function(above_values, strategy)
         while True:
             try:
                 roll_str = input('Input your roll: ')
@@ -291,11 +299,13 @@ def main():
             if min_sum == max_sum:
                 reroll, = rerolls
                 print("I would %s" % reroll)
-                below_prob = below_utility(roll_z)
-                above_prob = above_utility(roll_z)
-                print(("If you decide to go under, your chance is {:.2%}.\n" +
-                       "Otherwise, your chance is {:.2%}.").format(
-                           float(below_prob), float(above_prob)))
+                print("If you decide to go under, your chance is at most " +
+                      "{:.2%}.\n".format(
+                          float(below_max_prob(roll_z)),
+                          float(below_prob(roll_z))) +
+                      "Otherwise, your chance is at most {:.2%}.".format(
+                          float(above_max_prob(roll_z)),
+                          float(above_prob(roll_z))))
             else:
                 i = min_sum
                 for reroll, ss in itertools.groupby(rerolls):
