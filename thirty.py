@@ -388,10 +388,15 @@ def describe_strategy(dice_count, sides, values):
         p_win = min(max(below_max_prob[dice_count - n][s],
                         above_max_prob[dice_count - n][s])
                     for n, s in dice)
-        print('%02d: keep %s (%.2f%%)' %
+        n_outcomes = sum(
+            multiplicity
+            for n, s in dice
+            for outcome, multiplicity in
+            outcomes_summing_to(sides, dice_count, n, s))
+        print('%02d: keep %s (%.2f%%, %s)' %
               (v_sort.index(v),
                describe_choices(sides, dice),
-               float(100*p_win)))
+               float(100*p_win), n_outcomes))
 
 
 def describe_keep_reroll(dice_count, sides, strategy, roll, s):
