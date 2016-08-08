@@ -68,9 +68,47 @@ def combinations_summing_to(sides, dice_count, s, suffix=()):
             if 0 <= s <= k * dice_count)
 
 
-def outcomes_summing_to(sides, dice_count, s):
-    outcomes = combinations_summing_to(sides, dice_count, s)
-    return ((outcome, permutations(outcome)) for outcome in outcomes)
+def outcomes_containing_subset(sides, dice_count, subset):
+    """
+    >>> outcomes_containing_subset(3, 3, [0, 0, 0])
+    1
+    >>> outcomes_containing_subset(3, 3, [0, 0, 1])
+    3
+    >>> outcomes = [(0, 0, 0), (0, 0, 1), (0, 0, 2), (0, 1, 0), (0, 2, 0),
+    ...             (1, 0, 0), (2, 0, 0)]
+    >>> outcomes_containing_subset(3, 3, [0, 0]) == len(outcomes)
+    True
+    >>> outcomes_containing_subset(3, 3, [0]) == 3 ** 3 - 2 ** 3
+    True
+    """
+    c = +collections.Counter(subset)
+    if sum(c.values()) == dice_count:
+        return permutations(c)
+    else:
+        r = 0
+        for k in range(sides):
+            if k in c:
+                c2 = collections.Counter(c)
+                c2.subtract([k])
+                r += outcomes_containing_subset(sides, dice_count - 1, c2)
+        unused = sides - len(c)
+        if unused > 0:
+            r += unused * outcomes_containing_subset(sides, dice_count - 1, c)
+        return r
+
+
+def outcomes_summing_to(sides, dice_count, n, s):
+    """
+    >>> (outcome, multiplicity), = outcomes_summing_to(6, 6, 1, 4)
+    >>> outcome
+    (4,)
+    >>> multiplicity == 6 ** 6 - 5 ** 6
+    True
+    """
+    outcomes = combinations_summing_to(sides, n, s)
+    for outcome in outcomes:
+        multiplicity = outcomes_containing_subset(sides, dice_count, outcome)
+        yield outcome, multiplicity
 
 
 def subsequences(sequence, prefix=()):
