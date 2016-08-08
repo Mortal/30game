@@ -199,7 +199,52 @@ def my_utility(s):
         return above[s - 25]
 
 
+def describe_dice(sides, count, sum):
+    if count == 1:
+        return 'a %d' % (sum + 1)
+    elif sum == 0:
+        return '%d 1s' % count
+    elif sum == count * (sides - 1):
+        return '%d %ds' % (count, sides)
+    elif sum == 1:
+        return describe_dice(sides, count - 1, 0) + ' and a 2'
+    elif sum == count * (sides - 1) - 1:
+        if count == 2:
+            return 'a %d and a %d' % (sides, sides - 1)
+        else:
+            return '%d %ds and a %d' % (count - 1, sides, sides - 1)
+    else:
+        return '%d dice making %d' % (count, sum + count)
+
+
+def describe_choices_help(sides, n, ss):
+    if len(ss) > 1 and ss == set(range(min(ss), max(ss)+1)):
+        if min(ss) == 0:
+            return '%d dice making at most %d' % (n, max(ss) + n)
+        elif max(ss) == n * (sides - 1):
+            return '%d dice making at least %d' % (n, min(ss) + n)
+        else:
+            return '%d dice making between %d and %d' % (
+                n, min(ss) + n, max(ss) + n)
+    else:
+        return ' or '.join(describe_dice(sides, n, s) for s in sorted(ss))
+
+
+def describe_choices(sides, dice):
+    n_desc = []
+    for n in set(n for n, s in dice):
+        ss = set(s for n_, s in dice if n == n_)
+        n_desc.append(describe_choices_help(sides, n, ss))
+    return ' or '.join(n_desc)
+
+
 def describe_strategy(dice_count, sides, values):
+    strategy = optimizing_strategy(dice_count, values)
+    is_below = lambda s: 1 if s < 5 else 0  # noqa
+    is_above = lambda s: 1 if s >= 24 else 0  # noqa
+    below_max_prob = compute_values(dice_count, sides, strategy, is_below)
+    above_max_prob = compute_values(dice_count, sides, strategy, is_above)
+
     max_sum = dice_count * sides
     print(' '.join('%2d' % i for i in range(max_sum+1)))
     v_sort = sorted(set(v for row in values[0:dice_count] for v in row))
@@ -207,6 +252,19 @@ def describe_strategy(dice_count, sides, values):
         print('   '*(dice_count-n) +
               ' '.join('%02d' % v_sort.index(v)
                        for v in row))
+    print("On first roll, do the first possible:")
+    for v in reversed(v_sort):
+        dice = [(dice_count - n, s)
+                for n in range(dice_count)
+                for s in range(len(values[n]))
+                if values[n][s] == v]
+        p = min(max(below_max_prob[dice_count - n][s],
+                    above_max_prob[dice_count - n][s])
+                for n, s in dice)
+        print('%02d: keep %s (%.2f%%)' %
+              (v_sort.index(v),
+               describe_choices(sides, dice),
+               float(100*p)))
 
 
 def describe_keep_reroll(dice_count, sides, strategy, roll, s):
