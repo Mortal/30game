@@ -69,6 +69,21 @@ def outcomes_summing_to(sides, dice_count, s):
     return ((outcome, permutations(outcome)) for outcome in outcomes)
 
 
+def subsequences(sequence, prefix=()):
+    """
+    >>> print(subsequences((1, 1, 2, 2)))
+    ((1, 1, 2, 2), (1, 1, 2), (1, 1), (1, 2, 2), (1, 2), (1,), (2, 2), (2,), ())
+    """
+    if not sequence:
+        return (prefix,)
+    v = sequence[0]
+    i = 1
+    while i < len(sequence) and sequence[i] == v:
+        i += 1
+    return (subsequences(sequence[1:], prefix + (v,)) +
+            subsequences(sequence[i:], prefix))
+
+
 def compute_values_single_row(n, dice_count, sides, strategy, values,
                               div=fractions.Fraction):
     assert len(values) >= n-1
