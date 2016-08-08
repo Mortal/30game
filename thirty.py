@@ -233,6 +233,8 @@ def main():
 
     dice_count = 6
     sides = 6
+    print("Compute optimal strategy for %d %d-sided dice..." %
+          (dice_count, sides))
     values, strategy = solve_game(dice_count, sides, my_utility)
 
     if args.describe:
