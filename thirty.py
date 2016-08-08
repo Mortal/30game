@@ -105,7 +105,7 @@ def solve_game(dice_count, sides, utility):
         [slice(m, n) for m in range(1, n)]
         for n in range(dice_count + 1)]
 
-    def reroll_strategy(outcome, s=0):
+    def reroll_strategy(outcome, current_sum=0):
         """
         "outcome" is a list of length [1, dice_count] with dice in sorted
         order. Returns the subset of the dice to reroll.
@@ -113,17 +113,17 @@ def solve_game(dice_count, sides, utility):
         outcome_sum = sum(outcome)
         best_reroll = best_value = None
         for reroll_slice in rerolls[len(outcome)]:
-            reroll = outcome[reroll_slice]
-            reroll_sum = sum(reroll)
+            reroll_sum = sum(outcome[reroll_slice])
+            reroll_count = reroll_slice.stop - reroll_slice.start
             keep_sum = outcome_sum - reroll_sum
-            # Suppose we had already accumulated "s",
+            # Suppose we had already accumulated "current_sum",
             # and now we keep another "keep_sum"
-            # and reroll the "reroll" dice.
-            reroll_value = values[len(reroll)][s + keep_sum]
+            # and reroll the "reroll_count" dice.
+            reroll_value = values[reroll_count][current_sum + keep_sum]
             if best_reroll is None or best_value < reroll_value:
-                best_reroll = reroll
+                best_reroll = reroll_slice
                 best_value = reroll_value
-        return best_reroll
+        return outcome[best_reroll]
 
     for n in range(1, dice_count+1):
         values.append(compute_values_single_row(
