@@ -34,6 +34,7 @@ def permutations(s):
 def compute_values_single_row(n, dice_count, sides, strategy, values,
                               div=fractions.Fraction):
     assert len(values) >= n-1
+    assert n >= 1
     # What might the accumulated sum be at most with n dice remaining?
     max_sum = (dice_count - n) * (sides - 1)
     # At the end, tmp_value[s] will be k**n times the expected utility.
