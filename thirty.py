@@ -141,12 +141,12 @@ def compute_strategy(dice_count, sides, utility):
 
 
 def roll_value_function(values, strategy):
-    def roll_value(roll_z):
+    def roll_value(roll_z, current_sum=0):
         roll_sum = sum(roll_z)
         reroll = strategy(roll_z)
         reroll_sum = sum(reroll)
         keep_sum = roll_sum - reroll_sum
-        return values[len(reroll)][keep_sum]
+        return values[len(reroll)][current_sum + keep_sum]
 
     return roll_value
 
