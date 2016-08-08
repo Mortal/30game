@@ -553,30 +553,36 @@ def main():
         #strategy = optimizing_strategy_tiebreaks(
         #    values_max(below_values, above_values))
         utility_values = optimal_values(dice_count, sides, my_utility)
-        strategy = optimizing_strategy_tiebreaks(
+        values = values_zip(
             values_max(below_values, above_values), utility_values)
-        values = compute_values(dice_count, sides, strategy, my_utility)
+        strategy = optimizing_strategy(dice_count, values)
+        utility_values = compute_values(dice_count, sides, strategy, my_utility)
     else:
         print("Compute utility-maximizing strategy for %d %d-sided dice..." %
               (dice_count, sides))
         values, strategy = solve_game(dice_count, sides, my_utility)
+        utility_values = values
 
     if args.describe:
         describe_strategy(dice_count, sides, values)
     elif args.infiniplay:
-        v = values[dice_count][0]
+        v = utility_values[dice_count][0]
         print("Expected utility: %s = %.2f" % (v, float(v)))
         print("Probability of winning: {:.2%}".format(
             compute_value(dice_count, sides, strategy, is_win,
                           operator.truediv)))
         sum_utility = 0
+        n_wins = 0
         n_tries = 0
         while True:
             s = play_game(dice_count, sides, strategy)
             sum_utility += my_utility(s)
+            n_wins += int(is_win(s))
             n_tries += 1
-            print("Utility: %s. Played %s games, average utility %.2f" %
-                  (my_utility(s), n_tries, sum_utility / n_tries))
+            print("Utility: %s. Played %s games, " %
+                  (my_utility(s), n_tries) +
+                  "average utility %.2f, win rate %.2f%%" %
+                  (sum_utility / n_tries, 100 * n_wins / n_tries))
     else:
         below_max_prob = roll_value_optimal(dice_count, sides, is_below)
         above_max_prob = roll_value_optimal(dice_count, sides, is_above)
