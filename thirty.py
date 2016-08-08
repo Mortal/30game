@@ -481,9 +481,12 @@ def main():
 
     dice_count = 6
     sides = 6
+
+    is_below = lambda s: 1 if s < 5 else 0  # noqa
+    is_above = lambda s: 1 if s >= 24 else 0  # noqa
+    is_win = lambda s: is_below(s) or is_above(s)  # noqa
+
     if args.lucky:
-        is_below = lambda s: 1 if s < 5 else 0  # noqa
-        is_above = lambda s: 1 if s >= 24 else 0  # noqa
         below_prob = optimal_values(dice_count, sides, is_below)
         print("Probability of low success: {:.2%}".format(
                   float(below_prob[dice_count][0])))
@@ -526,8 +529,6 @@ def main():
             print("Utility: %s. Played %s games, average utility %.2f" %
                   (my_utility(s), n_tries, sum_utility / n_tries))
     else:
-        is_below = lambda s: 1 if s < 5 else 0  # noqa
-        is_above = lambda s: 1 if s >= 24 else 0  # noqa
         below_max_prob = roll_value_optimal(dice_count, sides, is_below)
         above_max_prob = roll_value_optimal(dice_count, sides, is_above)
         below_prob = roll_value_fixed(dice_count, sides, strategy, is_below)
