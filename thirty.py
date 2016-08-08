@@ -60,7 +60,7 @@ def compute_values_single_row(n, dice_count, sides, strategy, values,
             reroll_value = values[len(reroll)][s + keep_sum]
             tmp_value[s] += multiplicity * reroll_value
 
-    return [div(a, n_outcomes) for a in tmp_value]
+    return [div(a, sides ** n) for a in tmp_value]
 
 
 def compute_values(dice_count, sides, strategy, utility,
