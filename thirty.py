@@ -42,6 +42,33 @@ def outcomes(sides, dice_count):
     assert n_outcomes == sides ** dice_count
 
 
+def combinations_summing_to(sides, dice_count, s, suffix=()):
+    """
+    >>> print(list(combinations_summing_to(6, 4, 2)))
+    [(0, 0, 0, 2), (0, 0, 1, 1)]
+    >>> print(list(combinations_summing_to(6, 3, 5)))
+    [(0, 0, 5), (0, 1, 4), (0, 2, 3), (1, 1, 3), (1, 2, 2)]
+    >>> print(list(combinations_summing_to(6, 3, 12)))
+    [(2, 5, 5), (3, 4, 5), (4, 4, 4)]
+    """
+    if dice_count == 0:
+        return (suffix,) if s == 0 else ()
+    elif dice_count == 1:
+        return ((s,) + suffix,) if 0 <= s < sides else ()
+    else:
+        return itertools.chain.from_iterable(
+            # Combinations summing to s where the last die shows k
+            combinations_summing_to(k+1, dice_count - 1, s - k, (k,) + suffix)
+            for k in range(sides-1, -1, -1)
+            # Early bailout if you can't make s with all dice showing <= k
+            if 0 <= s <= k * dice_count)
+
+
+def outcomes_summing_to(sides, dice_count, s):
+    outcomes = combinations_summing_to(sides, dice_count, s)
+    return ((outcome, permutations(outcome)) for outcome in outcomes)
+
+
 def compute_values_single_row(n, dice_count, sides, strategy, values,
                               div=fractions.Fraction):
     assert len(values) >= n-1
