@@ -477,7 +477,7 @@ def describe_strategy(dice_count, sides, values):
             if len(conditional_actions[j-1]) > 1:
                 break
             (n2, s2), = conditional_actions[j-1]
-            if s2 < s or can_cooccur(sides, dice_count, n, s, n2, s2):
+            if n < n2 or can_cooccur(sides, dice_count, n, s, n2, s2):
                 break
             conditional_actions[j-1], conditional_actions[j] = (
                 conditional_actions[j], conditional_actions[j-1])
