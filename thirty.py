@@ -411,8 +411,8 @@ def describe_strategy(dice_count, sides, values):
         print('   '*(dice_count-n) +
               ' '.join('%02d' % v_sort.index(v)
                        for v in row))
-    print("On first roll, do the first possible:")
     seen = set()
+    actions = []
     for v in reversed(v_sort):
         rerolls = [(n, s)
                    for n in range(dice_count)
@@ -430,8 +430,10 @@ def describe_strategy(dice_count, sides, values):
             if not all_seen_before:
                 seen.add((n, s))
                 dice.append((n, s))
-        if not dice:
-            continue
+        if dice:
+            actions.append(dice)
+    print("On first roll, do the first possible:")
+    for dice in actions:
         p_win = min(max(below_max_prob[dice_count - n][s],
                         above_max_prob[dice_count - n][s])
                     for n, s in dice)
