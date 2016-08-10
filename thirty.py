@@ -401,6 +401,25 @@ def describe_choices(sides, dice):
     return ' or '.join(n_desc)
 
 
+def can_cooccur(sides, dice, n1, s1, n2, s2):
+    """
+    Returns True if there exists outcomes where there is a choice between
+    (n1, s1) and (n2, s2).
+
+    >>> can_cooccur(6, 6, 5, 0, 4, 0)
+    True
+    >>> can_cooccur(6, 6, 5, 25, 4, 0)
+    False
+    >>> can_cooccur(6, 6, 6, 27, 3, 0)
+    False
+    """
+    if n1 == n2 == dice:
+        return s1 == s2
+    max1 = s1 + (dice - n1) * (sides - 1)
+    max2 = s2 + (dice - n2) * (sides - 1)
+    return s1 <= max2 and s2 <= max1
+
+
 def describe_strategy(dice_count, sides, values):
     strategy = optimizing_strategy(dice_count, values)
     is_below = lambda s: 1 if s < 5 else 0  # noqa
