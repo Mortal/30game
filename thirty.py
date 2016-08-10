@@ -367,11 +367,11 @@ def describe_dice(sides, count, sum):
         return '%d %ds' % (count, sides)
     elif sum == 1:
         return describe_dice(sides, count - 1, 0) + ' and a 2'
-    elif sum == count * (sides - 1) - 1:
-        if count == 2:
-            return 'a %d and a %d' % (sides, sides - 1)
-        else:
-            return '%d %ds and a %d' % (count - 1, sides, sides - 1)
+    #elif sum == count * (sides - 1) - 1:
+    #    if count == 2:
+    #        return 'a %d and a %d' % (sides, sides - 1)
+    #    else:
+    #        return '%d %ds and a %d' % (count - 1, sides, sides - 1)
     else:
         return '%d dice making %d' % (count, sum + count)
 
