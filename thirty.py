@@ -377,6 +377,12 @@ def describe_dice(sides, count, sum):
 
 
 def describe_choices_help(sides, n, ss):
+    if n == 1:
+        a_ss = ['a %s' % (s+n) for s in sorted(ss)]
+        if len(ss) == 1:
+            return a_ss[0]
+        else:
+            return '%s or %s' % (', '.join(a_ss[:-1]), a_ss[-1])
     start = {min(ss)} | {s for s in ss if s - 1 not in ss}
     stop = {max(ss)} | {s for s in ss if s + 1 not in ss}
     descs = []
