@@ -455,16 +455,44 @@ def describe_strategy(dice_count, sides, values):
                 dice.append((n, s))
         if dice:
             actions.append(dice)
+
+    unconditional_action = []
+    conditional_actions = []
+    for i, dice in enumerate(actions):
+        a = []
+        for n, s in dice:
+            outcomes = outcomes_summing_to(sides, dice_count, n, s)
+            if any(can_cooccur(sides, dice_count, n, s, n_, s_)
+                   for j in range(i) for n_, s_ in actions[j]):
+                a.append((n, s))
+            else:
+                unconditional_action.append((n, s))
+        if a:
+            conditional_actions.append(a)
+    for i in range(len(conditional_actions)):
+        if len(conditional_actions[i]) > 1:
+            continue
+        (n, s), = conditional_actions[i]
+        for j in range(i, 0, -1):
+            if len(conditional_actions[j-1]) > 1:
+                break
+            (n2, s2), = conditional_actions[j-1]
+            if s2 < s or can_cooccur(sides, dice_count, n, s, n2, s2):
+                break
+            conditional_actions[j-1], conditional_actions[j] = (
+                conditional_actions[j], conditional_actions[j-1])
+    actions = [unconditional_action] + conditional_actions
+
     print("On first roll, do the first possible:")
-    for dice in actions:
+    for i, dice in enumerate(actions):
         p_win = min(max(below_max_prob[dice_count - n][s],
                         above_max_prob[dice_count - n][s])
                     for n, s in dice)
-        n_outcomes = sum(
-            multiplicity
-            for n, s in dice
-            for outcome, multiplicity in
-            outcomes_summing_to(sides, dice_count, n, s))
+        n_outcomes = 0
+        for n, s in dice:
+            outcomes = outcomes_summing_to(sides, dice_count, n, s)
+            for outcome, multiplicity in outcomes:
+                n_outcomes += multiplicity
         print('keep %s (%.2f%%, %s)' %
               (describe_choices(sides, dice),
                float(100*p_win), n_outcomes))
