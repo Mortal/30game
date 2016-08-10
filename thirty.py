@@ -612,8 +612,9 @@ def main():
         #strategy = optimizing_strategy_tiebreaks(
         #    values_max(below_values, above_values))
         utility_values = optimal_values(dice_count, sides, my_utility)
-        values = values_zip(
-            values_max(below_values, above_values), utility_values)
+        #values = values_zip(
+        #    values_max(below_values, above_values), utility_values)
+        values = values_max(below_values, above_values)
         strategy = optimizing_strategy(dice_count, values)
         utility_values = compute_values(dice_count, sides, strategy, my_utility)
     elif args.self_defense:
