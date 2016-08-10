@@ -377,16 +377,20 @@ def describe_dice(sides, count, sum):
 
 
 def describe_choices_help(sides, n, ss):
-    if len(ss) > 1 and ss == set(range(min(ss), max(ss)+1)):
-        if min(ss) == 0:
-            return '%d dice making at most %d' % (n, max(ss) + n)
-        elif max(ss) == n * (sides - 1):
-            return '%d dice making at least %d' % (n, min(ss) + n)
+    start = {min(ss)} | {s for s in ss if s - 1 not in ss}
+    stop = {max(ss)} | {s for s in ss if s + 1 not in ss}
+    descs = []
+    for a, b in zip(sorted(start), sorted(stop)):
+        if a == b:
+            descs.append(describe_dice(sides, n, a))
+        elif a == 0:
+            descs.append('%d dice making at most %d' % (n, b + n))
+        elif b == n * (sides - 1):
+            descs.append('%d dice making at least %d' % (n, a + n))
         else:
-            return '%d dice making between %d and %d' % (
-                n, min(ss) + n, max(ss) + n)
-    else:
-        return ' or '.join(describe_dice(sides, n, s) for s in sorted(ss))
+            descs.append('%d dice making between %d and %d' %
+                         (n, a + n, b + n))
+    return ' or '.join(descs)
 
 
 def describe_choices(sides, dice):
