@@ -251,7 +251,7 @@ def optimizing_strategy(dice_count, values):
 
 
 def random_strategy(counter, starting_score, current_score, actions):
-    i = random.choice(range(len(actions)))
+    i = random.randrange(len(actions))
     reroll_dice, add_score = actions[i]
     if reroll_dice:
         do_continue = random.choice([False, True])
@@ -296,6 +296,7 @@ def compute_strategy(dice_count, sides, utility):
 def play_game(dice_count, sides, strategy):
     reroll_dice = dice_count
     starting_score = current_score = 0
+    restarts = 0
     while starting_score < 10000 // 50:
         counter = collections.Counter(
             [random.randrange(sides) for _ in range(reroll_dice)])
@@ -305,7 +306,9 @@ def play_game(dice_count, sides, strategy):
         a = list(actions(counter))
         if not a:
             print("Too bad!")
-            break
+            restarts += 1
+            current_score = 0
+            continue
         action_index, do_continue = strategy(
             counter, starting_score, current_score, a)
         reroll_dice, keep_score = a[action_index]
@@ -318,13 +321,14 @@ def play_game(dice_count, sides, strategy):
             print("You reroll %s dice" % reroll_dice)
         else:
             starting_score, current_score = starting_score + current_score, 0
+            restarts += 1
             print("Next turn")
             reroll_dice = dice_count
-    return starting_score
+    return restarts
 
 
-def my_utility(score):
-    return int(score >= 10000 // 50)
+def my_utility(restarts):
+    return restarts
 
 
 def input_roll(dice_count, sides, input=input):
@@ -385,17 +389,15 @@ def main():
         #     compute_value(dice_count, sides, strategy, is_win,
         #                   operator.truediv)))
         sum_utility = 0
-        n_wins = 0
         n_tries = 0
         while True:
             s = play_game(dice_count, sides, strategy)
             sum_utility += my_utility(s)
-            n_wins += int(is_win(s))
             n_tries += 1
-            print("Utility: %s. Won %s out of %s games, " %
-                  (my_utility(s), n_wins, n_tries) +
-                  "average utility %.2f, win rate %.2f%%" %
-                  (sum_utility / n_tries, 100 * n_wins / n_tries))
+            print("Utility: %s. Played %s games, " %
+                  (my_utility(s), n_tries) +
+                  "average utility %.2f" %
+                  (sum_utility / n_tries))
 
 
 if __name__ == "__main__":
