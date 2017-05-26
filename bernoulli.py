@@ -1,6 +1,4 @@
-import operator
 import fractions
-import functools
 from math import factorial
 
 
