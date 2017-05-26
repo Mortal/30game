@@ -5,18 +5,11 @@ import fractions
 import itertools
 import functools
 import collections
+from math import factorial
 
 
 def product(iterable):
     return functools.reduce(operator.mul, iterable, 1)
-
-
-def factorial(n):
-    """
-    >>> [factorial(n) for n in range(6)]
-    [1, 1, 2, 6, 24, 120]
-    """
-    return product(range(1, n+1))
 
 
 def permutations(s):
