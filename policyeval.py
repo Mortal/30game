@@ -34,26 +34,6 @@ def compute_values_single_row(
     return [fractions.Fraction(a, sides**n) for a in tmp_value]
 
 
-def probability_to_reach(
-    n: int, dice_count: int, sides: int, target: Sequence[Sequence[bool]], s: int = 0
-) -> tuple[fractions.Fraction, Sequence[tuple[int, Sequence[int]]]]:
-    values = [[1 if t else 0 for t in row] for row in target]
-    strategy = optimizing_strategy(dice_count, values)
-    n_successes = 0
-    good_outcomes: list[tuple[int, Sequence[int]]] = []
-    for outcome, multiplicity in outcomes(sides, n):
-        outcome_sum = sum(outcome)
-        reroll = strategy(outcome, s)
-        reroll_sum = sum(reroll)
-        keep_sum = outcome_sum - reroll_sum
-        reroll_value = values[len(reroll)][s + keep_sum]
-        if reroll_value:
-            good_outcomes.append((multiplicity, outcome))
-            n_successes += multiplicity
-    good_outcomes.sort()
-    return fractions.Fraction(n_successes, sides**n), good_outcomes
-
-
 def compute_values(
     dice_count: int, sides: int, strategy: Strategy, utility: Utility
 ) -> Sequence[Sequence[int | fractions.Fraction]]:
@@ -65,13 +45,6 @@ def compute_values(
     for n in range(1, dice_count + 1):
         values.append(compute_values_single_row(n, dice_count, sides, strategy, values))
     return values
-
-
-def compute_value(
-    dice_count: int, sides: int, strategy: Strategy, utility: Utility
-) -> int | fractions.Fraction:
-    values = compute_values(dice_count, sides, strategy, utility)
-    return values[dice_count][0]
 
 
 def optimizing_strategy(
@@ -107,35 +80,6 @@ def optimizing_strategy(
         return outcome[best_reroll]
 
     return reroll_strategy
-
-
-def values_max(
-    *targets: Sequence[Sequence[int | fractions.Fraction]],
-) -> Sequence[Sequence[int | fractions.Fraction]]:
-    values: list[Sequence[int | fractions.Fraction]] = []
-    for n in range(len(targets[0])):
-        values.append(
-            [max(target[n][s] for target in targets) for s in range(len(targets[0][n]))]
-        )
-    return values
-
-
-def values_zip(*targets: Sequence[Sequence[int]]) -> Sequence[Sequence[int]]:
-    values: list[Sequence[int]] = []
-    for n in range(len(targets[0])):
-        target_rows: Sequence[Sequence[int]] = [target[n] for target in targets]
-        values.append(list(zip(*target_rows)))  # type: ignore
-    return values
-
-
-def optimizing_strategy_tiebreaks(*targets: Sequence[Sequence[int]]) -> Strategy:
-    dice_count = len(targets[0]) - 1
-    return optimizing_strategy(dice_count, values_zip(*targets))
-
-
-def ensemble_of_optimizers(*targets: Sequence[Sequence[int]]) -> Strategy:
-    dice_count = len(targets[0]) - 1
-    return optimizing_strategy(dice_count, values_max(*targets))
 
 
 def solve_game(
@@ -178,17 +122,8 @@ def solve_game(
 
 
 def value(dice_count: int, sides: int, utility: Utility) -> int | fractions.Fraction:
+    # Only used in doctest
     return solve_game(dice_count, sides, utility)[0][dice_count][0]
-
-
-def optimal_values(
-    dice_count: int, sides: int, utility: Utility
-) -> Sequence[Sequence[int | fractions.Fraction]]:
-    return solve_game(dice_count, sides, utility)[0]
-
-
-def compute_strategy(dice_count: int, sides: int, utility: Utility) -> Strategy:
-    return solve_game(dice_count, sides, utility)[1]
 
 
 def roll_value_function(
