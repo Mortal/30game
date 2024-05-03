@@ -2,14 +2,16 @@ import random
 import argparse
 import operator
 import itertools
+from typing import Callable, Sequence
+
 from policyeval import (
     probability_to_reach, compute_values, compute_value, optimizing_strategy,
-    values_max, solve_game, optimal_values, roll_value_function,
+    values_max, solve_game, optimal_values, roll_value_function, Strategy, RollValueFunction, Utility,
 )
 from descriptions import describe_strategy, describe_keep_reroll
 
 
-def play_game(dice_count, sides, strategy):
+def play_game(dice_count: int, sides: int, strategy: Strategy) -> int:
     outcome = sorted(random.randrange(sides) for _ in range(dice_count))
     s = 0
     while outcome:
@@ -30,7 +32,7 @@ def play_game(dice_count, sides, strategy):
     return s
 
 
-def my_utility(s):
+def my_utility(s: int) -> int:
     opponents = 3
     lose_factor = -1
     max_lose = 14
@@ -51,17 +53,17 @@ def my_utility(s):
         return above[s - 25]
 
 
-def roll_value_optimal(dice_count, sides, utility):
+def roll_value_optimal(dice_count: int, sides: int, utility: Utility) -> RollValueFunction:
     values, strategy = solve_game(dice_count, sides, utility)
     return roll_value_function(values, strategy)
 
 
-def roll_value_fixed(dice_count, sides, strategy, utility):
+def roll_value_fixed(dice_count: int, sides: int, strategy: Strategy, utility: Utility) -> RollValueFunction:
     values = compute_values(dice_count, sides, strategy, utility)
     return roll_value_function(values, strategy)
 
 
-def input_roll(dice_count, sides, input=input):
+def input_roll(dice_count: int, sides: int, input: Callable[[str], str] = input) -> list[int]:
     while True:
         try:
             roll_str = input('Input your roll: ')
@@ -88,7 +90,7 @@ def input_roll(dice_count, sides, input=input):
         return roll
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--infiniplay', action='store_true')
     parser.add_argument('-d', '--describe', action='store_true')
@@ -161,8 +163,7 @@ def main():
         v = utility_values[dice_count][0]
         print("Expected utility: %s = %.2f" % (v, float(v)))
         print("Probability of winning: {:.2%}".format(
-            compute_value(dice_count, sides, strategy, is_win,
-                          operator.truediv)))
+            float(compute_value(dice_count, sides, strategy, is_win))))
         sum_utility = 0
         n_wins = 0
         n_tries = 0
@@ -178,8 +179,8 @@ def main():
     else:
         below_max_prob = roll_value_optimal(dice_count, sides, is_below)
         above_max_prob = roll_value_optimal(dice_count, sides, is_above)
-        below_prob = roll_value_fixed(dice_count, sides, strategy, is_below)
-        above_prob = roll_value_fixed(dice_count, sides, strategy, is_above)
+        # below_prob = roll_value_fixed(dice_count, sides, strategy, is_below)
+        # above_prob = roll_value_fixed(dice_count, sides, strategy, is_above)
         while True:
             roll = input_roll(dice_count, sides)
             min_sum = (dice_count - len(roll))
@@ -195,9 +196,9 @@ def main():
                 print("I would %s" % reroll)
                 print("If you decide to go under, your chance is at most " +
                       "{:.2%}.\n".format(
-                          float(below_max_prob(roll_z))) +
+                          float(below_max_prob(roll_z, 0))) +
                       "Otherwise, your chance is at most {:.2%}.".format(
-                          float(above_max_prob(roll_z))))
+                          float(above_max_prob(roll_z, 0))))
             else:
                 i = min_sum
                 for reroll, ss in itertools.groupby(rerolls):

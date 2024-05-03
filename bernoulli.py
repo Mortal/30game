@@ -2,7 +2,7 @@ import fractions
 from math import factorial
 
 
-def main():
+def main() -> None:
     dice_count = 6
     sides = 6
     p = fractions.Fraction(1, sides)
@@ -11,14 +11,14 @@ def main():
     print("Pr[no successes in first try] = %s\n= %.2f" %
           (no_success, float(no_success)))
 
-    count = [0]
-    all_prob = [1]
+    count: list[int | fractions.Fraction] = [0]
+    all_prob: list[int | fractions.Fraction] = [1]
     for n in range(1, dice_count+1):
         # Suppose we have n dice left.
         # Each outcome corresponds to a number of successes.
-        t_count = 0
-        t_all_prob = 0
-        prob_sum = 0
+        t_count: int | fractions.Fraction = 0
+        t_all_prob: int | fractions.Fraction = 0
+        prob_sum: int | fractions.Fraction = 0
         for outcome in range(0, n+1):
             # "outcome" successes.
             outcome_multiplicity = (

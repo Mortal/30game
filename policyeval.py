@@ -1,16 +1,22 @@
 import fractions
 import functools
+from typing import Callable, Sequence
+
 from rolls import outcomes
 
 
-def compute_values_single_row(n, dice_count, sides, strategy, values,
-                              div=fractions.Fraction):
+Strategy = Callable[[Sequence[int], int], Sequence[int]]
+Utility = Callable[[int], int | fractions.Fraction]
+RollValueFunction = Callable[[Sequence[int], int], int | fractions.Fraction]
+
+
+def compute_values_single_row(n: int, dice_count: int, sides: int, strategy: Strategy, values: Sequence[Sequence[int | fractions.Fraction]]) -> Sequence[fractions.Fraction]:
     assert len(values) >= n-1
     assert n >= 1
     # What might the accumulated sum be at most with n dice remaining?
     max_sum = (dice_count - n) * (sides - 1)
     # At the end, tmp_value[s] will be k**n times the expected utility.
-    tmp_value = [0 for s in range(max_sum + 1)]
+    tmp_value: list[int | fractions.Fraction] = [0 for s in range(max_sum + 1)]
 
     for outcome, multiplicity in outcomes(sides, n):
         outcome_sum = sum(outcome)
@@ -21,15 +27,14 @@ def compute_values_single_row(n, dice_count, sides, strategy, values,
             reroll_value = values[len(reroll)][s + keep_sum]
             tmp_value[s] += multiplicity * reroll_value
 
-    return [div(a, sides ** n) for a in tmp_value]
+    return [fractions.Fraction(a, sides ** n) for a in tmp_value]
 
 
-def probability_to_reach(n, dice_count, sides, target, s=0,
-                         div=fractions.Fraction):
+def probability_to_reach(n: int, dice_count: int, sides: int, target: Sequence[Sequence[bool]], s: int = 0) -> tuple[fractions.Fraction, Sequence[tuple[int, Sequence[int]]]]:
     values = [[1 if t else 0 for t in row] for row in target]
     strategy = optimizing_strategy(dice_count, values)
     n_successes = 0
-    good_outcomes = []
+    good_outcomes: list[tuple[int, Sequence[int]]] = []
     for outcome, multiplicity in outcomes(sides, n):
         outcome_sum = sum(outcome)
         reroll = strategy(outcome, s)
@@ -40,42 +45,27 @@ def probability_to_reach(n, dice_count, sides, target, s=0,
             good_outcomes.append((multiplicity, outcome))
             n_successes += multiplicity
     good_outcomes.sort()
-    return div(n_successes, sides ** n), good_outcomes
+    return fractions.Fraction(n_successes, sides ** n), good_outcomes
 
 
-def ensure_numeric(f):
-    @functools.wraps(f)
-    def wrapper(*args, **kwargs):
-        v = f(*args, **kwargs)
-        if isinstance(v, bool):
-            return int(v)
-        else:
-            return v
-
-    return wrapper
-
-
-def compute_values(dice_count, sides, strategy, utility,
-                   div=fractions.Fraction):
+def compute_values(dice_count: int, sides: int, strategy: Strategy, utility: Utility) -> Sequence[Sequence[int | fractions.Fraction]]:
     # values[n][s] == v means that for n remaining dice,
     # accumulated sum s, the expected utility is v.
-    values = []
+    values: list[Sequence[int | fractions.Fraction]] = []
     # Fill out "values" for n = 0 using the utility function.
-    utility = ensure_numeric(utility)
     values.append([utility(s) for s in range(dice_count * (sides-1) + 1)])
     for n in range(1, dice_count + 1):
         values.append(compute_values_single_row(
-            n, dice_count, sides, strategy, values, div=div))
+            n, dice_count, sides, strategy, values))
     return values
 
 
-def compute_value(dice_count, sides, strategy, utility,
-                  div=fractions.Fraction):
-    values = compute_values(dice_count, sides, strategy, utility, div=div)
+def compute_value(dice_count: int, sides: int, strategy: Strategy, utility: Utility) -> int | fractions.Fraction:
+    values = compute_values(dice_count, sides, strategy, utility)
     return values[dice_count][0]
 
 
-def optimizing_strategy(dice_count, values):
+def optimizing_strategy(dice_count: int, values: Sequence[Sequence[int | fractions.Fraction]]) -> Strategy:
     # What can we do with an outcome on n dice?
     # Reroll the first m (0 <= m < n) or the last m (1 <= m < n).
     rerolls = [
@@ -83,12 +73,13 @@ def optimizing_strategy(dice_count, values):
         [slice(m, n) for m in range(1, n)]
         for n in range(dice_count + 1)]
 
-    def reroll_strategy(outcome, current_sum=0):
+    def reroll_strategy(outcome: Sequence[int], current_sum: int) -> Sequence[int]:
         """
         "outcome" is a list of length [1, dice_count] with dice in sorted
         order. Returns the subset of the dice to reroll.
         """
         outcome_sum = sum(outcome)
+        best_reroll: slice | None
         best_reroll = best_value = None
         for reroll_slice in rerolls[len(outcome)]:
             reroll_sum = sum(outcome[reroll_slice])
@@ -101,13 +92,14 @@ def optimizing_strategy(dice_count, values):
             if best_reroll is None or best_value < reroll_value:
                 best_reroll = reroll_slice
                 best_value = reroll_value
+        assert best_reroll is not None
         return outcome[best_reroll]
 
     return reroll_strategy
 
 
-def values_max(*targets):
-    values = []
+def values_max(*targets: Sequence[Sequence[int | fractions.Fraction]]) -> Sequence[Sequence[int | fractions.Fraction]]:
+    values: list[Sequence[int | fractions.Fraction]] = []
     for n in range(len(targets[0])):
         target_rows = [target[n] for target in targets]
         values.append([max(target[n][s] for target in targets)
@@ -115,25 +107,25 @@ def values_max(*targets):
     return values
 
 
-def values_zip(*targets):
-    values = []
+def values_zip(*targets: Sequence[Sequence[int]]) -> Sequence[Sequence[int]]:
+    values: list[Sequence[int]] = []
     for n in range(len(targets[0])):
-        target_rows = [target[n] for target in targets]
-        values.append(list(zip(*target_rows)))
+        target_rows: Sequence[Sequence[int]] = [target[n] for target in targets]
+        values.append(list(zip(*target_rows)))  # type: ignore
     return values
 
 
-def optimizing_strategy_tiebreaks(*targets):
+def optimizing_strategy_tiebreaks(*targets: Sequence[Sequence[int]]) -> Strategy:
     dice_count = len(targets[0]) - 1
     return optimizing_strategy(dice_count, values_zip(*targets))
 
 
-def ensemble_of_optimizers(*targets):
+def ensemble_of_optimizers(*targets: Sequence[Sequence[int]]) -> Strategy:
     dice_count = len(targets[0]) - 1
     return optimizing_strategy(dice_count, values_max(*targets))
 
 
-def solve_game(dice_count, sides, utility):
+def solve_game(dice_count: int, sides: int, utility: Utility) -> tuple[Sequence[Sequence[int | fractions.Fraction]], Strategy]:
     """
     Suppose we have n k-sided dice (sides 0, 1, ..., k-1)
     and we perform the following process:
@@ -155,10 +147,9 @@ def solve_game(dice_count, sides, utility):
 
     # values[n][s] == v means that for n remaining dice,
     # accumulated sum s, the expected utility is v.
-    values = []
+    values: list[Sequence[int | fractions.Fraction]] = []
 
     # Fill out "values" for n = 0 using the utility function.
-    utility = ensure_numeric(utility)
     values.append([utility(s) for s in range(dice_count * (sides-1) + 1)])
 
     reroll_strategy = optimizing_strategy(dice_count, values)
@@ -170,22 +161,22 @@ def solve_game(dice_count, sides, utility):
     return values, reroll_strategy
 
 
-def value(dice_count, sides, utility):
+def value(dice_count: int, sides: int, utility: Utility) -> int | fractions.Fraction:
     return solve_game(dice_count, sides, utility)[0][dice_count][0]
 
 
-def optimal_values(dice_count, sides, utility):
+def optimal_values(dice_count: int, sides: int, utility: Utility) -> Sequence[Sequence[int | fractions.Fraction]]:
     return solve_game(dice_count, sides, utility)[0]
 
 
-def compute_strategy(dice_count, sides, utility):
+def compute_strategy(dice_count: int, sides: int, utility: Utility) -> Strategy:
     return solve_game(dice_count, sides, utility)[1]
 
 
-def roll_value_function(values, strategy):
-    def roll_value(roll_z, current_sum=0):
+def roll_value_function(values: Sequence[Sequence[int | fractions.Fraction]], strategy: Strategy) -> RollValueFunction:
+    def roll_value(roll_z: Sequence[int], current_sum: int = 0) -> int | fractions.Fraction:
         roll_sum = sum(roll_z)
-        reroll = strategy(roll_z)
+        reroll = strategy(roll_z, 0)
         reroll_sum = sum(reroll)
         keep_sum = roll_sum - reroll_sum
         return values[len(reroll)][current_sum + keep_sum]

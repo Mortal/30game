@@ -7,7 +7,7 @@ import functools
 import collections
 
 
-def product(iterable):
+def product(iterable: Iterable[int]) -> int:
     return functools.reduce(operator.mul, iterable, 1)
 
 
@@ -24,7 +24,7 @@ def permutations_counter(counts):
     return factorial(n) // product(map(factorial, counts.values()))
 
 
-def permutations(s):
+def permutations(s: Iterable[int]) -> int:
     """
     >>> permutations('cat')
     6
@@ -34,12 +34,12 @@ def permutations(s):
     return permutations_counter(collections.Counter(s))
 
 
-def outcomes(sides, dice_count):
-    outcomes = itertools.combinations_with_replacement(
+def outcomes(sides: int, dice_count: int) -> Iterator[tuple[Sequence[int], int]]:
+    outcomes_ = itertools.combinations_with_replacement(
         range(sides), dice_count)
     n_outcomes = 0
     n_distinct = 0
-    for outcome in outcomes:
+    for outcome in outcomes_:
         multiplicity = permutations(outcome)
         n_outcomes += multiplicity
         n_distinct += 1
@@ -110,8 +110,7 @@ def can_keep_points(starting_score, current_score):
 
 
 def compute_values_single(dice_count, sides, remaining_dice,
-                          starting_score, current_score, strategy, values,
-                          div=fractions.Fraction):
+                          starting_score, current_score, strategy, values):
     assert remaining_dice >= 1
     # At the end, tmp_value will be k**n times the expected utility.
     tmp_value = 0
@@ -134,7 +133,7 @@ def compute_values_single(dice_count, sides, remaining_dice,
             result = values.nothing(starting_score)
         tmp_value += multiplicity * result
 
-    return div(tmp_value, sides ** remaining_dice)
+    return fractions.Fraction(tmp_value, sides ** remaining_dice)
 
 
 def ensure_numeric(f):
@@ -190,8 +189,7 @@ class Values(object):
             return self._utility[score]
 
 
-def fill_out_values(dice_count, sides, strategy, values,
-                    div=fractions.Fraction):
+def fill_out_values(dice_count, sides, strategy, values):
     max_score = 10000 // 50
     for starting_score in range(max_score, -1, -1):
         print("Fill out %s" % starting_score, flush=True)
@@ -201,21 +199,19 @@ def fill_out_values(dice_count, sides, strategy, values,
                     remaining_dice, starting_score, current_score,
                     compute_values_single(
                         dice_count, sides, remaining_dice, starting_score,
-                        current_score, strategy, values, div=div))
+                        current_score, strategy, values))
     return values
 
 
-def compute_values(dice_count, sides, strategy, utility,
-                   div=fractions.Fraction):
+def compute_values(dice_count, sides, strategy, utility):
     utility = ensure_numeric(utility)
     values = Values(dice_count, utility)
-    fill_out_values(dice_count, sides, strategy, values, div=div)
+    fill_out_values(dice_count, sides, strategy, values)
     return values
 
 
-def compute_value(dice_count, sides, strategy, utility,
-                  div=fractions.Fraction):
-    values = compute_values(dice_count, sides, strategy, utility, div=div)
+def compute_value(dice_count, sides, strategy, utility):
+    values = compute_values(dice_count, sides, strategy, utility)
     return values.play(dice_count, 0, 0)
 
 
@@ -273,11 +269,11 @@ def max_strategy(counter, starting_score, current_score, actions):
     return i, do_continue
 
 
-def solve_game(dice_count, sides, utility, div=fractions.Fraction):
+def solve_game(dice_count, sides, utility):
     utility = ensure_numeric(utility)
     values = Values(dice_count, utility)
     strategy = optimizing_strategy(dice_count, values)
-    fill_out_values(dice_count, sides, strategy, values, div=div)
+    fill_out_values(dice_count, sides, strategy, values)
     return values, strategy
 
 

@@ -1,11 +1,14 @@
 import collections
+import fractions
+from typing import Sequence, Iterable
+
 from rolls import (
     combinations_summing_to, outcomes_summing_to, subsequences,
 )
-from policyeval import compute_values, optimizing_strategy
+from policyeval import compute_values, optimizing_strategy, Strategy
 
 
-def describe_dice(sides, count, sum):
+def describe_dice(sides: int, count: int, sum: int) -> str:
     if count == 1:
         return 'a %d' % (sum + 1)
     elif sum == 0:
@@ -23,7 +26,7 @@ def describe_dice(sides, count, sum):
         return '%d dice making %d' % (count, sum + count)
 
 
-def describe_choices_help(sides, n, ss):
+def describe_choices_help(sides: int, n: int, ss: set[int]) -> str:
     if n == 1:
         a_ss = ['a %s' % (s+n) for s in sorted(ss)]
         if len(ss) == 1:
@@ -46,7 +49,7 @@ def describe_choices_help(sides, n, ss):
     return ' or '.join(descs)
 
 
-def describe_choices(sides, dice):
+def describe_choices(sides: int, dice: Sequence[tuple[int, int]]) -> str:
     n_desc = []
     for n in set(n for n, s in dice):
         ss = set(s for n_, s in dice if n == n_)
@@ -54,7 +57,7 @@ def describe_choices(sides, dice):
     return ' or '.join(n_desc)
 
 
-def can_cooccur(sides, dice, n1, s1, n2, s2):
+def can_cooccur(sides: int, dice: int, n1: int, s1: int, n2: int, s2: int) -> bool:
     """
     Returns True if there exists outcomes where there is a choice between
     (n1, s1) and (n2, s2).
@@ -73,7 +76,7 @@ def can_cooccur(sides, dice, n1, s1, n2, s2):
     return s1 <= max2 and s2 <= max1
 
 
-def describe_strategy(dice_count, sides, values):
+def describe_strategy(dice_count: int, sides: int, values: Sequence[Sequence[int | fractions.Fraction]]) -> None:
     strategy = optimizing_strategy(dice_count, values)
     is_below = lambda s: 1 if s < 5 else 0  # noqa
     is_above = lambda s: 1 if s >= 24 else 0  # noqa
@@ -151,7 +154,7 @@ def describe_strategy(dice_count, sides, values):
                float(100*p_win), n_outcomes))
 
 
-def describe_keep_reroll(dice_count, sides, strategy, roll, s):
+def describe_keep_reroll(dice_count: int, sides: int, strategy: Strategy, roll: Sequence[int], s: int) -> str:
     roll_z = [v - 1 for v in roll]
     s_z = s - (dice_count - len(roll))
     reroll_z = strategy(roll_z, s_z)
