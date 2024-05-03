@@ -23,8 +23,7 @@ def permutations(s: Iterable[int]) -> int:
 
 
 def outcomes(sides: int, dice_count: int) -> Iterator[tuple[Sequence[int], int]]:
-    outcomes_ = itertools.combinations_with_replacement(
-        range(sides), dice_count)
+    outcomes_ = itertools.combinations_with_replacement(range(sides), dice_count)
     n_outcomes = 0
     n_distinct = 0
     for outcome in outcomes_:
@@ -32,12 +31,16 @@ def outcomes(sides: int, dice_count: int) -> Iterator[tuple[Sequence[int], int]]
         n_outcomes += multiplicity
         n_distinct += 1
         yield outcome, multiplicity
-    assert n_outcomes == sides ** dice_count
-    assert n_distinct == (factorial(dice_count + sides-1) //
-                          (factorial(dice_count) * factorial(sides-1)))
+    assert n_outcomes == sides**dice_count
+    assert n_distinct == (
+        factorial(dice_count + sides - 1)
+        // (factorial(dice_count) * factorial(sides - 1))
+    )
 
 
-def combinations_summing_to(sides: int, dice_count: int, s: int, suffix: tuple[int, ...] = ()) -> Iterable[Sequence[int]]:
+def combinations_summing_to(
+    sides: int, dice_count: int, s: int, suffix: tuple[int, ...] = ()
+) -> Iterable[Sequence[int]]:
     """
     >>> print(list(combinations_summing_to(6, 4, 2)))
     [(0, 0, 0, 2), (0, 0, 1, 1)]
@@ -53,13 +56,16 @@ def combinations_summing_to(sides: int, dice_count: int, s: int, suffix: tuple[i
     else:
         return itertools.chain.from_iterable(
             # Combinations summing to s where the last die shows k
-            combinations_summing_to(k+1, dice_count - 1, s - k, (k,) + suffix)
-            for k in range(sides-1, -1, -1)
+            combinations_summing_to(k + 1, dice_count - 1, s - k, (k,) + suffix)
+            for k in range(sides - 1, -1, -1)
             # Early bailout if you can't make s with all dice showing <= k
-            if 0 <= s <= k * dice_count)
+            if 0 <= s <= k * dice_count
+        )
 
 
-def outcomes_containing_subset(sides: int, dice_count: int, subset: Iterable[int]) -> int:
+def outcomes_containing_subset(
+    sides: int, dice_count: int, subset: Iterable[int]
+) -> int:
     """
     >>> outcomes_containing_subset(3, 3, [0, 0, 0])
     1
@@ -88,7 +94,9 @@ def outcomes_containing_subset(sides: int, dice_count: int, subset: Iterable[int
         return r
 
 
-def outcomes_summing_to(sides: int, dice_count: int, n: int, s: int) -> Iterator[tuple[Sequence[int], int]]:
+def outcomes_summing_to(
+    sides: int, dice_count: int, n: int, s: int
+) -> Iterator[tuple[Sequence[int], int]]:
     """
     >>> (outcome, multiplicity), = outcomes_summing_to(6, 6, 1, 4)
     >>> outcome
@@ -102,7 +110,9 @@ def outcomes_summing_to(sides: int, dice_count: int, n: int, s: int) -> Iterator
         yield outcome, multiplicity
 
 
-def subsequences(sequence: Sequence[int], prefix: tuple[int, ...] = ()) -> tuple[tuple[int, ...], ...]:
+def subsequences(
+    sequence: Sequence[int], prefix: tuple[int, ...] = ()
+) -> tuple[tuple[int, ...], ...]:
     """
     >>> print(subsequences((1, 1, 2, 2)))
     ((1, 1, 2, 2), (1, 1, 2), (1, 1), (1, 2, 2), (1, 2), (1,), (2, 2), (2,), ())
@@ -113,5 +123,6 @@ def subsequences(sequence: Sequence[int], prefix: tuple[int, ...] = ()) -> tuple
     i = 1
     while i < len(sequence) and sequence[i] == v:
         i += 1
-    return (subsequences(sequence[1:], prefix + (v,)) +
-            subsequences(sequence[i:], prefix))
+    return subsequences(sequence[1:], prefix + (v,)) + subsequences(
+        sequence[i:], prefix
+    )

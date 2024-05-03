@@ -5,6 +5,7 @@ import fractions
 import itertools
 import functools
 import collections
+from typing import Sequence, Iterable, Iterator
 
 
 def product(iterable: Iterable[int]) -> int:
@@ -16,7 +17,7 @@ def factorial(n):
     >>> [factorial(n) for n in range(6)]
     [1, 1, 2, 6, 24, 120]
     """
-    return product(range(1, n+1))
+    return product(range(1, n + 1))
 
 
 def permutations_counter(counts):
@@ -35,8 +36,7 @@ def permutations(s: Iterable[int]) -> int:
 
 
 def outcomes(sides: int, dice_count: int) -> Iterator[tuple[Sequence[int], int]]:
-    outcomes_ = itertools.combinations_with_replacement(
-        range(sides), dice_count)
+    outcomes_ = itertools.combinations_with_replacement(range(sides), dice_count)
     n_outcomes = 0
     n_distinct = 0
     for outcome in outcomes_:
@@ -44,14 +44,18 @@ def outcomes(sides: int, dice_count: int) -> Iterator[tuple[Sequence[int], int]]
         n_outcomes += multiplicity
         n_distinct += 1
         yield outcome, multiplicity
-    assert n_outcomes == sides ** dice_count
-    assert n_distinct == (factorial(dice_count + sides-1) //
-                          (factorial(dice_count) * factorial(sides-1)))
+    assert n_outcomes == sides**dice_count
+    assert n_distinct == (
+        factorial(dice_count + sides - 1)
+        // (factorial(dice_count) * factorial(sides - 1))
+    )
 
 
 def outcomes_counter(sides, dice_count):
-    return ((collections.Counter(outcome), multiplicity)
-            for outcome, multiplicity in outcomes(sides, dice_count))
+    return (
+        (collections.Counter(outcome), multiplicity)
+        for outcome, multiplicity in outcomes(sides, dice_count)
+    )
 
 
 def actions(counter):
@@ -70,11 +74,11 @@ def actions(counter):
         if k in (0, 4):
             # We may keep any number of these.
             keep_keys.append(k)
-            keep_counts.append(list(range(v+1)))
+            keep_counts.append(list(range(v + 1)))
         elif v >= 3:
             # We may keep at least three of these.
             keep_keys.append(k)
-            keep_counts.append([0] + list(range(3, v+1)))
+            keep_counts.append([0] + list(range(3, v + 1)))
 
     pairs = sum(1 for k in counter if counter[k] >= 2)
     if pairs >= 3:
@@ -93,7 +97,7 @@ def actions(counter):
                 if k == 0:
                     score += 1000 // 50 * (c - 2)
                 else:
-                    score += (k+1) * 100 // 50 * (c - 2)
+                    score += (k + 1) * 100 // 50 * (c - 2)
             elif k == 0:
                 score += 100 // 50 * c
             elif k == 4:
@@ -109,8 +113,9 @@ def can_keep_points(starting_score, current_score):
     return True
 
 
-def compute_values_single(dice_count, sides, remaining_dice,
-                          starting_score, current_score, strategy, values):
+def compute_values_single(
+    dice_count, sides, remaining_dice, starting_score, current_score, strategy, values
+):
     assert remaining_dice >= 1
     # At the end, tmp_value will be k**n times the expected utility.
     tmp_value = 0
@@ -120,20 +125,22 @@ def compute_values_single(dice_count, sides, remaining_dice,
         assert all(s > 0 for r, s in a)
         if a:
             action_index, do_continue = strategy(
-                counter, starting_score, current_score, a)
+                counter, starting_score, current_score, a
+            )
             reroll_dice, keep_score = a[action_index]
             if do_continue:
                 result = values.play(
-                    reroll_dice or dice_count, starting_score,
-                    current_score + keep_score)
+                    reroll_dice or dice_count,
+                    starting_score,
+                    current_score + keep_score,
+                )
             else:
-                result = values.stop(
-                    starting_score, current_score + keep_score)
+                result = values.stop(starting_score, current_score + keep_score)
         else:
             result = values.nothing(starting_score)
         tmp_value += multiplicity * result
 
-    return fractions.Fraction(tmp_value, sides ** remaining_dice)
+    return fractions.Fraction(tmp_value, sides**remaining_dice)
 
 
 def ensure_numeric(f):
@@ -151,9 +158,10 @@ def ensure_numeric(f):
 class Values(object):
     def __init__(self, dice_count, utility):
         max_score = 10000 // 50
-        self._values = [[[None for c in range(max_score - s + 1)]
-                         for s in range(max_score + 1)]
-                        for r in range(dice_count)]
+        self._values = [
+            [[None for c in range(max_score - s + 1)] for s in range(max_score + 1)]
+            for r in range(dice_count)
+        ]
         self._utility = [utility(s) for s in range(max_score + 1)]
 
     def play(self, remaining_dice, starting_score, current_score):
@@ -161,9 +169,12 @@ class Values(object):
         if starting_score + current_score >= max_score:
             return self.utility(max_score)
         current_score = min(current_score, max_score - starting_score)
-        v = self._values[remaining_dice-1][starting_score][current_score]
+        v = self._values[remaining_dice - 1][starting_score][current_score]
         if v is None:
-            print("Try to evaluate (%s, %s, %s)" % (starting_score, current_score, remaining_dice))
+            print(
+                "Try to evaluate (%s, %s, %s)"
+                % (starting_score, current_score, remaining_dice)
+            )
         assert v is not None
         return v
 
@@ -171,7 +182,7 @@ class Values(object):
         max_score = 10000 // 50
         assert starting_score <= max_score
         assert current_score <= max_score - starting_score
-        self._values[remaining_dice-1][starting_score][current_score] = v
+        self._values[remaining_dice - 1][starting_score][current_score] = v
 
     def stop(self, starting_score, current_score):
         if can_keep_points(starting_score, current_score):
@@ -196,10 +207,19 @@ def fill_out_values(dice_count, sides, strategy, values):
         for current_score in range(max_score - starting_score, -1, -1):
             for remaining_dice in range(1, dice_count + 1):
                 values.set_value(
-                    remaining_dice, starting_score, current_score,
+                    remaining_dice,
+                    starting_score,
+                    current_score,
                     compute_values_single(
-                        dice_count, sides, remaining_dice, starting_score,
-                        current_score, strategy, values))
+                        dice_count,
+                        sides,
+                        remaining_dice,
+                        starting_score,
+                        current_score,
+                        strategy,
+                        values,
+                    ),
+                )
     return values
 
 
@@ -229,10 +249,9 @@ def optimizing_strategy(dice_count, values):
             # print(reroll_dice, add_score)
             assert add_score > 0
             continue_score = values.play(
-                reroll_dice or dice_count,
-                starting_score, current_score + add_score)
-            stop_score = values.stop(
-                starting_score, current_score + add_score)
+                reroll_dice or dice_count, starting_score, current_score + add_score
+            )
+            stop_score = values.stop(starting_score, current_score + add_score)
             if best_reroll is None or best_value < continue_score:
                 best_reroll = i
                 best_continue = True
@@ -295,18 +314,23 @@ def play_game(dice_count, sides, strategy):
     restarts = 0
     while starting_score < 10000 // 50:
         counter = collections.Counter(
-            [random.randrange(sides) for _ in range(reroll_dice)])
-        print("Starting score: %4d  Current score: %4d  You roll: %s" %
-              (50 * starting_score, 50 * current_score,
-               sorted(a + 1 for a in counter.elements())))
+            [random.randrange(sides) for _ in range(reroll_dice)]
+        )
+        print(
+            "Starting score: %4d  Current score: %4d  You roll: %s"
+            % (
+                50 * starting_score,
+                50 * current_score,
+                sorted(a + 1 for a in counter.elements()),
+            )
+        )
         a = list(actions(counter))
         if not a:
             print("Too bad!")
             restarts += 1
             current_score = 0
             continue
-        action_index, do_continue = strategy(
-            counter, starting_score, current_score, a)
+        action_index, do_continue = strategy(counter, starting_score, current_score, a)
         reroll_dice, keep_score = a[action_index]
         if not reroll_dice and not do_continue:
             print("You can't stop with 0 dice, cheater!")
@@ -330,9 +354,9 @@ def my_utility(restarts):
 def input_roll(dice_count, sides, input=input):
     while True:
         try:
-            roll_str = input('Input your roll: ')
+            roll_str = input("Input your roll: ")
         except (KeyboardInterrupt, EOFError):
-            print('')
+            print("")
             raise SystemExit()
         roll_split = roll_str.split()
         if len(roll_split) == 1:
@@ -356,9 +380,9 @@ def input_roll(dice_count, sides, input=input):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-p', '--infiniplay', action='store_true')
-    parser.add_argument('-r', '--random', action='store_true')
-    parser.add_argument('-m', '--max', action='store_true')
+    parser.add_argument("-p", "--infiniplay", action="store_true")
+    parser.add_argument("-r", "--random", action="store_true")
+    parser.add_argument("-m", "--max", action="store_true")
     args = parser.parse_args()
 
     dice_count = 6
@@ -371,12 +395,15 @@ def main():
         strategy = random_strategy
         expected_utility = 0
     else:
-        print("Compute utility-maximizing strategy for %d %d-sided dice..." %
-              (dice_count, sides))
+        print(
+            "Compute utility-maximizing strategy for %d %d-sided dice..."
+            % (dice_count, sides)
+        )
         values, strategy = solve_game(dice_count, sides, my_utility)
         expected_utility = values.play(dice_count, 0, 0)
 
-    is_win = lambda score: score >= 10000 // 50
+    # def is_win(score: int) -> bool:
+    #     return score >= 10000 // 50
 
     if args.infiniplay:
         v = expected_utility
@@ -390,10 +417,10 @@ def main():
             s = play_game(dice_count, sides, strategy)
             sum_utility += my_utility(s)
             n_tries += 1
-            print("Utility: %s. Played %s games, " %
-                  (my_utility(s), n_tries) +
-                  "average utility %.2f" %
-                  (sum_utility / n_tries))
+            print(
+                "Utility: %s. Played %s games, " % (my_utility(s), n_tries)
+                + "average utility %.2f" % (sum_utility / n_tries)
+            )
 
 
 if __name__ == "__main__":
