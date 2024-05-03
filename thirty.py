@@ -1,22 +1,22 @@
-import random
 import argparse
 import itertools
+import random
 from typing import Callable
 
+from descriptions import describe_keep_reroll, describe_strategy
 from policyeval import (
-    probability_to_reach,
-    compute_values,
-    compute_value,
-    optimizing_strategy,
-    values_max,
-    solve_game,
-    optimal_values,
-    roll_value_function,
-    Strategy,
     RollValueFunction,
+    Strategy,
     Utility,
+    compute_value,
+    compute_values,
+    optimal_values,
+    optimizing_strategy,
+    probability_to_reach,
+    roll_value_function,
+    solve_game,
+    values_max,
 )
-from descriptions import describe_strategy, describe_keep_reroll
 
 
 def play_game(dice_count: int, sides: int, strategy: Strategy) -> int:

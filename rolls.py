@@ -1,7 +1,7 @@
-import operator
-import itertools
-import functools
 import collections
+import functools
+import itertools
+import operator
 from math import factorial
 from typing import Iterable, Iterator, Sequence
 

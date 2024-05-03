@@ -3,7 +3,6 @@ from typing import Callable, Sequence
 
 from rolls import outcomes
 
-
 Strategy = Callable[[Sequence[int], int], Sequence[int]]
 Utility = Callable[[int], int | fractions.Fraction]
 RollValueFunction = Callable[[Sequence[int], int], int | fractions.Fraction]

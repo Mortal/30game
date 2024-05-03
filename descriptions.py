@@ -2,12 +2,8 @@ import collections
 import fractions
 from typing import Sequence
 
-from rolls import (
-    combinations_summing_to,
-    outcomes_summing_to,
-    subsequences,
-)
-from policyeval import compute_values, optimizing_strategy, Strategy
+from policyeval import Strategy, compute_values, optimizing_strategy
+from rolls import combinations_summing_to, outcomes_summing_to, subsequences
 
 
 def describe_dice(sides: int, count: int, sum: int) -> str:

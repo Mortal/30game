@@ -1,11 +1,11 @@
-import random
 import argparse
-import operator
-import fractions
-import itertools
-import functools
 import collections
-from typing import Sequence, Iterable, Iterator
+import fractions
+import functools
+import itertools
+import operator
+import random
+from typing import Iterable, Iterator, Sequence
 
 
 def product(iterable: Iterable[int]) -> int:
